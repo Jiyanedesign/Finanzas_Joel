@@ -1858,7 +1858,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('group-acc-parent').style.display = 'none';
     }
     if (document.getElementById('acc-text-color')) {
-      document.getElementById('acc-text-color').value = '#FFFFFF';
+            document.getElementById('acc-text-color').value = '#FFFFFF';
     }
     container.innerHTML = '';
 
@@ -1867,31 +1867,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Separar en cuentas base (no credito) y tarjetas de credito
-    const baseAccounts = state.accounts.filter(a => a.type !== 'credito' && a.type !== 'tarjeta_credito');
-    const creditCards = state.accounts.filter(a => a.type === 'credito' || a.type === 'tarjeta_credito');
+    // Separar por categorías reales
+    const bankAccounts = state.accounts.filter(a => a.type === 'cuenta_bancaria' || a.type === 'efectivo' || a.type === 'debito' || a.type === 'billetera_digital' || a.type === 'otro');
+    const debitCards = state.accounts.filter(a => a.type === 'tarjeta_debito');
+    const creditCards = state.accounts.filter(a => a.type === 'tarjeta_credito' || a.type === 'credito');
 
-    // Crear dos secciones principales en el contenedor
-    const mainSection = document.createElement('div');
-    mainSection.className = 'accounts-section-group';
-    mainSection.style.width = '100%';
-    mainSection.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">Cuentas Bancarias, Billeteras y Efectivo</h3>';
-    
-    const baseGrid = document.createElement('div');
-    baseGrid.className = 'accounts-visual-list';
-    mainSection.appendChild(baseGrid);
-    container.appendChild(mainSection);
-
-    // Pintar las cuentas base
-    baseAccounts.forEach(a => {
+    function renderSingleCard(a, gridContainer) {
       const activeBalance = a.initial_balance;
       const lastFourStr = a.last_four ? `•••• •••• •••• ${a.last_four}` : 'CUENTA VIRTUAL';
-
-      const cardWrapper = document.createElement('div');
-      cardWrapper.className = 'account-card-wrapper';
-      cardWrapper.style.display = 'flex';
-      cardWrapper.style.flexDirection = 'column';
-      cardWrapper.style.gap = '1rem';
 
       const card = document.createElement('div');
       card.className = 'bank-card-premium';
@@ -1899,6 +1882,35 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.color = a.text_color || '#FFFFFF';
       
       const typeDetails = getAccountTypeDetails(a.type);
+      
+      // Determinar texto de enlace/relación
+      let linkedInfo = '';
+      if (a.type === 'tarjeta_credito' || a.type === 'credito' || a.type === 'tarjeta_debito') {
+        const parentAcc = state.accounts.find(p => p.id === a.parent_account_id);
+        if (parentAcc) {
+          linkedInfo = `
+            <div style="font-size: 0.65rem; opacity: 0.9; display: flex; align-items: center; gap: 0.2rem; margin-top: 0.15rem;">
+              <i data-lucide="link" style="width: 10px; height: 10px;"></i>
+              <span>Fondo: <strong>${parentAcc.name}</strong></span>
+            </div>
+          `;
+        }
+      } else {
+        // Es cuenta bancaria/billetera/efectivo. Buscar si tiene tarjetas ligadas
+        const linked = state.accounts.filter(c => c.parent_account_id === a.id);
+        if (linked.length > 0) {
+          linkedInfo = `
+            <div style="font-size: 0.65rem; opacity: 0.9; display: flex; align-items: center; gap: 0.2rem; margin-top: 0.15rem;">
+              <i data-lucide="link" style="width: 10px; height: 10px;"></i>
+              <span>Tarjetas: <strong>${linked.map(l => l.name).join(', ')}</strong></span>
+            </div>
+          `;
+        }
+      }
+
+      // Determinar label del balance
+      const balanceLabel = (a.type === 'credito' || a.type === 'tarjeta_credito') ? 'Consumo Realizado' : 'Saldo Estimado';
+
       card.innerHTML = `
         <div class="card-top" style="color: ${a.text_color || '#FFFFFF'}">
           <div style="display: flex; flex-direction: column; text-align: left;">
@@ -1911,136 +1923,74 @@ document.addEventListener('DOMContentLoaded', () => {
           </span>
         </div>
         <div class="card-middle" style="color: ${a.text_color || '#FFFFFF'}">
-          <span class="card-balance-label" style="color: ${a.text_color || '#FFFFFF'}; opacity: 0.85;">Saldo Estimado</span>
+          <span class="card-balance-label" style="color: ${a.text_color || '#FFFFFF'}; opacity: 0.85;">${balanceLabel}</span>
           <span class="card-balance-val amount-sensitive">$${Number(activeBalance).toFixed(2)}</span>
         </div>
         <div class="card-bottom" style="color: ${a.text_color || '#FFFFFF'}">
-          <span class="card-number">${lastFourStr}</span>
+          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;">
+            <span class="card-number" style="font-size: 0.85rem;">${lastFourStr}</span>
+            ${linkedInfo}
+          </div>
           <div class="card-actions-row">
             <button class="btn-card-action btn-edit-card" data-id="${a.id}" title="Editar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="edit-2"></i></button>
             <button class="btn-card-action btn-delete-card" data-id="${a.id}" title="Eliminar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="trash-2"></i></button>
           </div>
         </div>
       `;
-      cardWrapper.appendChild(card);
+      gridContainer.appendChild(card);
+    }
 
-      // Buscar si tiene tarjetas de crédito/débito asociadas
-      const linkedCards = creditCards.filter(c => c.parent_account_id === a.id);
-      if (linkedCards.length > 0) {
-        const linkedContainer = document.createElement('div');
-        linkedContainer.className = 'linked-cards-container';
-        linkedContainer.style.paddingLeft = '1.5rem';
-        linkedContainer.style.borderLeft = '3px dashed var(--accent-color)';
-        linkedContainer.style.display = 'flex';
-        linkedContainer.style.flexDirection = 'column';
-        linkedContainer.style.gap = '0.75rem';
-        linkedContainer.style.marginTop = '0.5rem';
-
-        const label = document.createElement('div');
-        label.style.fontSize = '0.75rem';
-        label.style.fontWeight = 'bold';
-        label.style.textTransform = 'uppercase';
-        label.style.color = 'var(--text-muted)';
-        label.innerHTML = '💳 Tarjetas Vinculadas:';
-        linkedContainer.appendChild(label);
-
-        linkedCards.forEach(c => {
-          const cBalance = c.initial_balance;
-          const cLastFour = c.last_four ? `•••• •••• •••• ${c.last_four}` : 'TARJETA';
-
-          const cCard = document.createElement('div');
-          cCard.className = 'bank-card-premium';
-          cCard.style.height = '145px'; // Un poco más pequeña para denotar subordinación
-          cCard.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
-          cCard.style.color = c.text_color || '#FFFFFF';
-          cCard.style.padding = '1rem';
-          
-          const cTypeDetails = getAccountTypeDetails(c.type);
-          cCard.innerHTML = `
-            <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
-              <div style="display: flex; flex-direction: column; text-align: left;">
-                <span class="card-bank-name" style="font-weight: 700; font-size: 0.95rem; line-height: 1.2;">${c.name}</span>
-                <span style="font-size: 0.65rem; opacity: 0.8;">${c.bank || 'Tarjeta'}</span>
-              </div>
-              <span class="card-type-chip" style="align-self: flex-start; background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; font-size: 0.6rem; padding: 0.15rem 0.4rem; display: flex; align-items: center; gap: 0.2rem;">
-                <i data-lucide="${cTypeDetails.icon}" class="icon-small" style="width: 10px; height: 10px;"></i>
-                ${cTypeDetails.label}
-              </span>
-            </div>
-            <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}; margin: 0.35rem 0;">
-              <span class="card-balance-label" style="font-size: 0.65rem; opacity: 0.85;">Consumo Realizado</span>
-              <span class="card-balance-val amount-sensitive" style="font-size: 1.2rem;">$${Number(cBalance).toFixed(2)}</span>
-            </div>
-            <div class="card-bottom" style="color: ${c.text_color || '#FFFFFF'}">
-              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;">
-                <span class="card-number" style="font-size: 0.8rem;">${cLastFour}</span>
-                <div style="font-size: 0.65rem; opacity: 0.85; display: flex; align-items: center; gap: 0.2rem;">
-                  <i data-lucide="link" style="width: 9px; height: 9px;"></i>
-                  <span>Fondo: <strong>${a.name}</strong></span>
-                </div>
-              </div>
-              <div class="card-actions-row">
-                <button class="btn-card-action btn-edit-card" data-id="${c.id}" title="Editar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="edit-2" style="width: 12px; height: 12px;"></i></button>
-                <button class="btn-card-action btn-delete-card" data-id="${c.id}" title="Eliminar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>
-              </div>
-            </div>
-          `;
-          linkedContainer.appendChild(cCard);
-        });
-        cardWrapper.appendChild(linkedContainer);
-      }
-
-      baseGrid.appendChild(cardWrapper);
-    });
-
-    // Ahora, pintar las tarjetas de crédito independientes (no asociadas a ninguna cuenta)
-    const independentCards = creditCards.filter(c => !c.parent_account_id);
-    if (independentCards.length > 0) {
-      const creditSection = document.createElement('div');
-      creditSection.className = 'accounts-section-group';
-      creditSection.style.width = '100%';
-      creditSection.style.marginTop = '3rem';
-      creditSection.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">Tarjetas de Crédito Independientes</h3>';
+    // 1. Cuentas Bancarias, Billeteras y Efectivo
+    if (bankAccounts.length > 0) {
+      const section = document.createElement('div');
+      section.className = 'accounts-section-group';
+      section.style.width = '100%';
+      section.style.marginBottom = '2.5rem';
+      section.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1.25rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">🏦 Cuentas Bancarias, Billeteras y Efectivo</h3>';
       
-      const creditGrid = document.createElement('div');
-      creditGrid.className = 'accounts-visual-list';
-      creditSection.appendChild(creditGrid);
-      container.appendChild(creditSection);
+      const grid = document.createElement('div');
+      grid.className = 'accounts-visual-list';
+      section.appendChild(grid);
+      container.appendChild(section);
+      
+      bankAccounts.forEach(a => {
+        renderSingleCard(a, grid);
+      });
+    }
 
-      independentCards.forEach(c => {
-        const activeBalance = c.initial_balance;
-        const lastFourStr = c.last_four ? `•••• •••• •••• ${c.last_four}` : 'CUENTA VIRTUAL';
+    // 2. Tarjetas de Débito
+    if (debitCards.length > 0) {
+      const section = document.createElement('div');
+      section.className = 'accounts-section-group';
+      section.style.width = '100%';
+      section.style.marginBottom = '2.5rem';
+      section.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1.25rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">💳 Tarjetas de Débito</h3>';
+      
+      const grid = document.createElement('div');
+      grid.className = 'accounts-visual-list';
+      section.appendChild(grid);
+      container.appendChild(section);
+      
+      debitCards.forEach(a => {
+        renderSingleCard(a, grid);
+      });
+    }
 
-        const card = document.createElement('div');
-        card.className = 'bank-card-premium';
-        card.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
-        card.style.color = c.text_color || '#FFFFFF';
-        
-        const typeDetails = getAccountTypeDetails(c.type);
-        card.innerHTML = `
-          <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
-            <div style="display: flex; flex-direction: column; text-align: left;">
-              <span class="card-bank-name" style="font-weight: 700; font-size: 1.1rem; line-height: 1.2;">${c.name}</span>
-              <span style="font-size: 0.75rem; opacity: 0.8;">${c.bank || 'Tarjeta de Crédito'}</span>
-            </div>
-            <span class="card-type-chip" style="align-self: flex-start; background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; display: flex; align-items: center; gap: 0.25rem;">
-              <i data-lucide="${typeDetails.icon}" class="icon-small" style="width: 12px; height: 12px;"></i>
-              ${typeDetails.label}
-            </span>
-          </div>
-          <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}">
-            <span class="card-balance-label" style="color: ${c.text_color || '#FFFFFF'}; opacity: 0.85;">Consumo Realizado</span>
-            <span class="card-balance-val amount-sensitive">$${Number(activeBalance).toFixed(2)}</span>
-          </div>
-          <div class="card-bottom" style="color: ${c.text_color || '#FFFFFF'}">
-            <span class="card-number">${lastFourStr}</span>
-            <div class="card-actions-row">
-              <button class="btn-card-action btn-edit-card" data-id="${c.id}" title="Editar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}"><i data-lucide="edit-2"></i></button>
-              <button class="btn-card-action btn-delete-card" data-id="${c.id}" title="Eliminar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}"><i data-lucide="trash-2"></i></button>
-            </div>
-          </div>
-        `;
-        creditGrid.appendChild(card);
+    // 3. Tarjetas de Crédito
+    if (creditCards.length > 0) {
+      const section = document.createElement('div');
+      section.className = 'accounts-section-group';
+      section.style.width = '100%';
+      section.style.marginBottom = '2.5rem';
+      section.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1.25rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">💳 Tarjetas de Crédito</h3>';
+      
+      const grid = document.createElement('div');
+      grid.className = 'accounts-visual-list';
+      section.appendChild(grid);
+      container.appendChild(section);
+      
+      creditCards.forEach(a => {
+        renderSingleCard(a, grid);
       });
     }
 

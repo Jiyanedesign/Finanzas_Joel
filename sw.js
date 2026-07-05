@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurafinance-v7';
+const CACHE_NAME = 'aurafinance-v8';
 
 // Install: precache core shell
 self.addEventListener('install', (e) => {

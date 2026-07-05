@@ -981,7 +981,8 @@ textarea.input-premium {
 }
 
 .bank-card-premium {
-  height: 190px;
+  min-height: 205px;
+  height: auto;
   border-radius: var(--radius-md);
   padding: 1.5rem;
   color: #fff;
