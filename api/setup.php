@@ -229,8 +229,26 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
     $userCount = $stmt->fetch()['count'];
 
-    if ($userCount == 0) {
+    $stmtMCount = $pdo->query("SELECT COUNT(*) as count FROM monthly_configs");
+    $monthCount = $stmtMCount->fetch()['count'];
+
+    if ($userCount == 0 || $monthCount == 0) {
         echo "<h2>Sembrando Datos Financieros Iniciales...</h2>";
+
+        // Limpiar para evitar duplicados parciales de ejecuciones previas
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
+        $pdo->exec("TRUNCATE TABLE users;");
+        $pdo->exec("TRUNCATE TABLE accounts;");
+        $pdo->exec("TRUNCATE TABLE categories;");
+        $pdo->exec("TRUNCATE TABLE subcategories;");
+        $pdo->exec("TRUNCATE TABLE monthly_configs;");
+        $pdo->exec("TRUNCATE TABLE incomes;");
+        $pdo->exec("TRUNCATE TABLE expenses;");
+        $pdo->exec("TRUNCATE TABLE debts;");
+        $pdo->exec("TRUNCATE TABLE savings_goals;");
+        $pdo->exec("TRUNCATE TABLE recurring_templates;");
+        $pdo->exec("TRUNCATE TABLE audit_logs;");
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
         // Crear usuario admin@admin.com / admin123
         $passHash = password_hash('admin123', PASSWORD_BCRYPT);

@@ -619,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.accounts.forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.id;
-        opt.textContent = `${a.name} (${a.type.replace('_', ' ')}) - $${a.initial_balance.toFixed(2)}`;
+        opt.textContent = `${a.name} (${a.type.replace('_', ' ')}) - $${Number(a.initial_balance).toFixed(2)}`;
         sel.appendChild(opt);
       });
     });
@@ -745,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const expensePct = initialBudget > 0 ? Math.min(100, (totalExpenses / initialBudget) * 100) : 0;
     const progressBar = document.getElementById('kpi-expense-progress');
     progressBar.style.width = `${expensePct}%`;
-    document.getElementById('kpi-expense-pct').textContent = `${expensePct.toFixed(0)}% usado`;
+    document.getElementById('kpi-expense-pct').textContent = `${Number(expensePct).toFixed(0)}% usado`;
     
     if (expensePct > 90) progressBar.style.backgroundColor = 'var(--color-danger)';
     else if (expensePct > 75) progressBar.style.backgroundColor = 'var(--color-warning)';
@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Income Pct
     const incomePct = initialBudget > 0 ? (totalIncomes / initialBudget) * 100 : 0;
-    document.getElementById('kpi-income-pct').textContent = `${incomePct.toFixed(0)}% del presupuesto mensual`;
+    document.getElementById('kpi-income-pct').textContent = `${Number(incomePct).toFixed(0)}% del presupuesto mensual`;
 
     // Tarjeta más usada
     const cardUsage = {};
@@ -971,9 +971,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><strong>${monthNames[m.month - 1]} ${m.year}</strong></td>
-        <td>$${m.initial_budget.toFixed(2)}</td>
-        <td>$${m.initial_balance.toFixed(2)}</td>
-        <td>$${m.saving_goal.toFixed(2)}</td>
+        <td>$${Number(m.initial_budget).toFixed(2)}</td>
+        <td>$${Number(m.initial_balance).toFixed(2)}</td>
+        <td>$${Number(m.saving_goal).toFixed(2)}</td>
         <td>${m.currency}</td>
         <td><span class="badge-premium ${m.is_closed ? 'cancelado' : 'pagado'}">${m.is_closed ? 'Cerrado' : 'Abierto'}</span></td>
         <td>
@@ -1100,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td><span class="badge-premium" style="background-color: var(--color-primary-light); color: var(--color-primary);">${i.category_name || 'Global'}</span></td>
         <td><span style="color: ${i.account_color || 'inherit'}; font-weight: 600;">${i.account_name || 'Efectivo'}</span></td>
         <td>${i.receipt_method}</td>
-        <td><strong class="text-success amount-sensitive">$${i.amount.toFixed(2)}</strong></td>
+        <td><strong class="text-success amount-sensitive">$${Number(i.amount).toFixed(2)}</strong></td>
         <td><span class="badge-premium ${i.status}">${i.status}</span></td>
         <td>
           <div class="action-buttons-cell">
@@ -1277,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span style="color: ${e.account_color || 'inherit'}; font-weight: 600;">${e.account_name || 'Efectivo'}</span><br>
           <small class="text-muted">${e.payment_method.replace('_', ' ')}</small>
         </td>
-        <td><strong class="text-danger amount-sensitive">$${e.amount.toFixed(2)}</strong></td>
+        <td><strong class="text-danger amount-sensitive">$${Number(e.amount).toFixed(2)}</strong></td>
         <td class="text-center">${receiptBadge}</td>
         <td>
           <div class="action-buttons-cell">
@@ -1547,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="card-middle">
           <span class="card-balance-label">Saldo Estimado</span>
-          <span class="card-balance-val amount-sensitive">$${activeBalance.toFixed(2)}</span>
+          <span class="card-balance-val amount-sensitive">$${Number(activeBalance).toFixed(2)}</span>
         </div>
         <div class="card-bottom">
           <span class="card-number">${lastFourStr}</span>
@@ -1668,7 +1668,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       let alertMsg = '';
       if (spent > budget && budget > 0) {
-        alertMsg = `<div class="cat-limit-alert"><i data-lucide="alert-triangle" class="icon-small"></i> ¡Límite excedido por $${(spent - budget).toFixed(2)}!</div>`;
+        alertMsg = `<div class="cat-limit-alert"><i data-lucide="alert-triangle" class="icon-small"></i> ¡Límite excedido por $${(spent - Number(budget)).toFixed(2)}!</div>`;
       } else if (pct >= 90 && budget > 0) {
         alertMsg = `<div class="cat-limit-alert" style="color: var(--color-warning);"><i data-lucide="alert-circle" class="icon-small"></i> ¡Cerca del límite (más del 90%)!</div>`;
       }
@@ -1697,8 +1697,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div class="cat-values-calc">
-          <span>Gastado: <strong class="amount-sensitive">$${spent.toFixed(2)}</strong></span>
-          <span>Presupuesto: $${budget.toFixed(2)}</span>
+          <span>Gastado: <strong class="amount-sensitive">$${Number(spent).toFixed(2)}</strong></span>
+          <span>Presupuesto: $${Number(budget).toFixed(2)}</span>
         </div>
         ${alertMsg}
       `;
@@ -1797,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><strong>${r.name}</strong></td>
-        <td><strong class="text-danger amount-sensitive">$${r.amount.toFixed(2)}</strong></td>
+        <td><strong class="text-danger amount-sensitive">$${Number(r.amount).toFixed(2)}</strong></td>
         <td>${r.category_name || 'Sin Categoría'}</td>
         <td>${r.account_name || 'Efectivo'} <br><small class="text-muted">${r.payment_method.replace('_', ' ')}</small></td>
         <td><span class="badge-premium parcial">${r.frequency}</span></td>
@@ -1917,14 +1917,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><strong>${d.name}</strong><br><small class="text-muted">Acreedor: ${d.lender}</small></td>
-        <td>$${d.total_amount.toFixed(2)}</td>
-        <td><span class="text-success">$${d.paid_amount.toFixed(2)}</span></td>
-        <td><strong class="text-danger amount-sensitive">$${remaining.toFixed(2)}</strong></td>
+        <td>$${Number(d.total_amount).toFixed(2)}</td>
+        <td><span class="text-success">$${Number(d.paid_amount).toFixed(2)}</span></td>
+        <td><strong class="text-danger amount-sensitive">$${Number(remaining).toFixed(2)}</strong></td>
         <td>
           <div class="progress-bar-container" style="width: 100px;">
             <div class="progress-bar" style="width: ${pct}%; background-color: var(--color-success);"></div>
           </div>
-          <small class="text-muted">${pct.toFixed(0)}% cubierto</small>
+          <small class="text-muted">${Number(pct).toFixed(0)}% cubierto</small>
         </td>
         <td>${d.due_date ? formatDate(d.due_date) : 'N/A'}</td>
         <td><span class="badge-premium ${d.status}">${d.status}</span></td>
@@ -2037,7 +2037,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.accounts.forEach(a => {
       const opt = document.createElement('option');
       opt.value = a.id;
-      opt.textContent = `${a.name} ($${a.initial_balance.toFixed(2)})`;
+      opt.textContent = `${a.name} ($${Number(a.initial_balance).toFixed(2)})`;
       accSelect.appendChild(opt);
     });
 
@@ -2116,8 +2116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div class="cat-values-calc">
-          <span>Ahorrado: <strong class="amount-sensitive">$${s.saved_amount.toFixed(2)}</strong></span>
-          <span>Objetivo: $${s.target_amount.toFixed(2)}</span>
+          <span>Ahorrado: <strong class="amount-sensitive">$${Number(s.saved_amount).toFixed(2)}</strong></span>
+          <span>Objetivo: $${Number(s.target_amount).toFixed(2)}</span>
         </div>
         <div class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">${s.description || 'Sin descripción'}</div>
       `;
@@ -2243,8 +2243,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const expTotal = dayExpenses.reduce((acc, e) => acc + e.amount, 0);
 
       let indicators = '';
-      if (incTotal > 0) indicators += `<span class="indicator-inc">+${incTotal.toFixed(0)}</span>`;
-      if (expTotal > 0) indicators += `<span class="indicator-exp">-${expTotal.toFixed(0)}</span>`;
+      if (incTotal > 0) indicators += `<span class="indicator-inc">+${Number(incTotal).toFixed(0)}</span>`;
+      if (expTotal > 0) indicators += `<span class="indicator-exp">-${Number(expTotal).toFixed(0)}</span>`;
 
       cell.innerHTML = `
         <span class="day-num">${day}</span>
@@ -2281,7 +2281,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <strong>${i.source}</strong> (Ingreso)<br>
           <small class="text-muted">${i.receipt_method} -> ${i.account_name || 'Efectivo'}</small>
         </div>
-        <span class="text-success amount-sensitive">+$${i.amount.toFixed(2)}</span>
+        <span class="text-success amount-sensitive">+$${Number(i.amount).toFixed(2)}</span>
       `;
       list.appendChild(div);
     });
@@ -2294,7 +2294,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <strong>${e.title}</strong> (Gasto)<br>
           <small class="text-muted">${e.payment_method.replace('_', ' ')} (${e.account_name || 'Efectivo'})</small>
         </div>
-        <span class="text-danger amount-sensitive">-$${e.amount.toFixed(2)}</span>
+        <span class="text-danger amount-sensitive">-$${Number(e.amount).toFixed(2)}</span>
       `;
       list.appendChild(div);
     });
@@ -2470,8 +2470,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const balance = m.initial_balance + totalIncomes - totalExpenses;
 
     document.getElementById('rep-initial-balance').textContent = formatCurrency(m.initial_balance);
-    document.getElementById('rep-total-incomes').textContent = `+$${totalIncomes.toFixed(2)}`;
-    document.getElementById('rep-total-expenses').textContent = `-$${totalExpenses.toFixed(2)}`;
+    document.getElementById('rep-total-incomes').textContent = `+$${Number(totalIncomes).toFixed(2)}`;
+    document.getElementById('rep-total-expenses').textContent = `-$${Number(totalExpenses).toFixed(2)}`;
     document.getElementById('rep-net-balance').textContent = formatCurrency(balance);
 
     // Informe Categorías
@@ -2490,7 +2490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const c in catMap) {
       const pct = totalExpenses > 0 ? (catMap[c] / totalExpenses) * 100 : 0;
       tableCat.innerHTML += `
-        <tr><td>${c}:</td><td>$${catMap[c].toFixed(2)} (${pct.toFixed(1)}%)</td></tr>
+        <tr><td>${c}:</td><td>$${Number(catMap[c]).toFixed(2)} (${Number(pct).toFixed(1)}%)</td></tr>
       `;
     }
     catDiv.appendChild(tableCat);
@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tableAcc.className = 'report-table';
     state.accounts.forEach(a => {
       tableAcc.innerHTML += `
-        <tr><td>${a.name}:</td><td>Saldo final estimado: $${a.initial_balance.toFixed(2)}</td></tr>
+        <tr><td>${a.name}:</td><td>Saldo final estimado: $${Number(a.initial_balance).toFixed(2)}</td></tr>
       `;
     });
     accDiv.appendChild(tableAcc);
@@ -2514,7 +2514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let recommendations = '<ul>';
     if (actualSaving < savingGoal) {
-      recommendations += `<li>⚠️ Su balance de ahorro actual ($${actualSaving.toFixed(2)}) es menor a su meta de ahorro mensual de $${savingGoal.toFixed(2)}.</li>`;
+      recommendations += `<li>⚠️ Su balance de ahorro actual ($${Number(actualSaving).toFixed(2)}) es menor a su meta de ahorro mensual de $${Number(savingGoal).toFixed(2)}.</li>`;
     } else {
       recommendations += `<li>🎉 ¡Excelente! Ha cubierto su meta de ahorro establecida para este mes.</li>`;
     }
@@ -2523,7 +2523,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.categories.forEach(c => {
       const spent = state.expenses.reduce((acc, e) => (e.status === 'pagado' && e.category_id === c.id) ? acc + e.amount : acc, 0);
       if (spent > c.budget && c.budget > 0) {
-        recommendations += `<li>📉 Ha excedido el presupuesto en la categoría <strong>${c.name}</strong> por $${(spent - c.budget).toFixed(2)}. Considere recortar gastos variables.</li>`;
+        recommendations += `<li>📉 Ha excedido el presupuesto en la categoría <strong>${c.name}</strong> por $${(spent - Number(c.budget)).toFixed(2)}. Considere recortar gastos variables.</li>`;
       }
     });
 
@@ -2567,17 +2567,17 @@ document.addEventListener('DOMContentLoaded', () => {
       resDiv.innerHTML = `
         <div class="card-premium">
           <h3>${text1} (Principal)</h3>
-          <p>Presupuesto: $${res.month1.meta.initial_budget.toFixed(2)}</p>
-          <p class="text-success">Ingresos: $${res.month1.incomes.toFixed(2)}</p>
-          <p class="text-danger">Gastos: $${res.month1.expenses.toFixed(2)}</p>
-          <p><strong>Balance: $${res.month1.balance.toFixed(2)}</strong></p>
+          <p>Presupuesto: $${Number(res.month1.meta.initial_budget).toFixed(2)}</p>
+          <p class="text-success">Ingresos: $${Number(res.month1.incomes).toFixed(2)}</p>
+          <p class="text-danger">Gastos: $${Number(res.month1.expenses).toFixed(2)}</p>
+          <p><strong>Balance: $${Number(res.month1.balance).toFixed(2)}</strong></p>
         </div>
         <div class="card-premium">
           <h3>${text2} (Contraste)</h3>
-          <p>Presupuesto: $${res.month2.meta.initial_budget.toFixed(2)}</p>
-          <p class="text-success">Ingresos: $${res.month2.incomes.toFixed(2)}</p>
-          <p class="text-danger">Gastos: $${res.month2.expenses.toFixed(2)}</p>
-          <p><strong>Balance: $${res.month2.balance.toFixed(2)}</strong></p>
+          <p>Presupuesto: $${Number(res.month2.meta.initial_budget).toFixed(2)}</p>
+          <p class="text-success">Ingresos: $${Number(res.month2.incomes).toFixed(2)}</p>
+          <p class="text-danger">Gastos: $${Number(res.month2.expenses).toFixed(2)}</p>
+          <p><strong>Balance: $${Number(res.month2.balance).toFixed(2)}</strong></p>
         </div>
       `;
     } catch (err) {
@@ -2711,7 +2711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     els.detailDialogBody.innerHTML = `
       <div class="detail-row"><span class="detail-label">Título:</span><span class="detail-val">${exp.title}</span></div>
       <div class="detail-row"><span class="detail-label">Comercio:</span><span class="detail-val">${exp.merchant || 'Sin Comercio'}</span></div>
-      <div class="detail-row"><span class="detail-label">Monto:</span><span class="detail-val text-danger">$${exp.amount.toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-label">Monto:</span><span class="detail-val text-danger">$${Number(exp.amount).toFixed(2)}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha/Hora:</span><span class="detail-val">${formatDate(exp.date)} ${exp.time}</span></div>
       <div class="detail-row"><span class="detail-label">Categoría:</span><span class="detail-val">${exp.category_name || 'Sin Categoría'}</span></div>
       <div class="detail-row"><span class="detail-label">Subcategoría:</span><span class="detail-val">${exp.subcategory_name || 'Ninguna'}</span></div>
@@ -2752,9 +2752,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const pct = budget > 0 ? (totalExpenses / budget) * 100 : 0;
     
     if (pct >= 90) {
-      alerts.push({ type: 'danger', icon: 'alert-triangle', text: `¡Crítico! Ha consumido el ${pct.toFixed(0)}% del presupuesto mensual disponible.` });
+      alerts.push({ type: 'danger', icon: 'alert-triangle', text: `¡Crítico! Ha consumido el ${Number(pct).toFixed(0)}% del presupuesto mensual disponible.` });
     } else if (pct >= 75) {
-      alerts.push({ type: 'warning', icon: 'alert-circle', text: `Cuidado: Ha superado el ${pct.toFixed(0)}% de su presupuesto mensual.` });
+      alerts.push({ type: 'warning', icon: 'alert-circle', text: `Cuidado: Ha superado el ${Number(pct).toFixed(0)}% de su presupuesto mensual.` });
     }
 
     // 2. Alerta de Comprobantes Faltantes en montos altos
@@ -2767,7 +2767,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.categories.forEach(c => {
       const spent = state.expenses.reduce((acc, e) => (e.status === 'pagado' && e.category_id === c.id) ? acc + e.amount : acc, 0);
       if (spent > c.budget && c.budget > 0) {
-        alerts.push({ type: 'danger', icon: 'zap', text: `¡Sobrepasado! Gastó $${spent.toFixed(0)} en ${c.name} (Límite: $${c.budget.toFixed(0)}).` });
+        alerts.push({ type: 'danger', icon: 'zap', text: `¡Sobrepasado! Gastó $${Number(spent).toFixed(0)} en ${c.name} (Límite: $${Number(c.budget).toFixed(0)}).` });
       }
     });
 
@@ -2847,7 +2847,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   function formatCurrency(val) {
     const symbol = state.activeMonthConfig ? state.activeMonthConfig.currency : '$';
-    return `${symbol}${val.toFixed(2)}`;
+    return `${symbol}${Number(val).toFixed(2)}`;
   }
 
   function formatDate(dateStr) {
