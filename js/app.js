@@ -23,6 +23,27 @@ document.addEventListener('DOMContentLoaded', () => {
     charts: {} // Almacena instancias de Chart.js
   };
 
+  // Helper para obtener detalles visuales y traducción del tipo de cuenta
+  function getAccountTypeDetails(type) {
+    switch (type) {
+      case 'cuenta_bancaria':
+        return { label: 'Cuenta Bancaria', icon: 'landmark' };
+      case 'tarjeta_debito':
+        return { label: 'Tarjeta de Débito', icon: 'credit-card' };
+      case 'tarjeta_credito':
+      case 'credito':
+        return { label: 'Tarjeta de Crédito', icon: 'credit-card' };
+      case 'billetera_digital':
+        return { label: 'Billetera Digital', icon: 'smartphone' };
+      case 'efectivo':
+        return { label: 'Efectivo', icon: 'coins' };
+      case 'debito':
+        return { label: 'Débito / Ahorros', icon: 'wallet' };
+      default:
+        return { label: (type || 'OTRO').toUpperCase().replace('_', ' '), icon: 'wallet' };
+    }
+  }
+
   // ==========================================
   // SELECTORES DE ELEMENTOS PRINCIPALES
   // ==========================================
@@ -684,13 +705,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Poblar selector de cuenta padre (para vincular tarjetas)
     const parentAccSelect = document.getElementById('acc-parent-id');
     if (parentAccSelect) {
-      parentAccSelect.innerHTML = '<option value="">Ninguna (Tarjeta Directa)</option>';
+      parentAccSelect.innerHTML = '<option value="">Ninguna (Cuenta/Tarjeta Independiente)</option>';
       state.accounts.forEach(a => {
-        // Solo vincular a cuentas que no sean crédito
-        if (a.type !== 'credito') {
+        // Solo vincular a cuentas que no sean de crédito
+        if (a.type !== 'credito' && a.type !== 'tarjeta_credito') {
           const opt = document.createElement('option');
           opt.value = a.id;
-          opt.textContent = `${a.name} (${a.type.replace('_', ' ')})`;
+          opt.textContent = `${a.name} (${getAccountTypeDetails(a.type).label})`;
           parentAccSelect.appendChild(opt);
         }
       });
@@ -1847,8 +1868,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Separar en cuentas base (no credito) y tarjetas de credito
-    const baseAccounts = state.accounts.filter(a => a.type !== 'credito');
-    const creditCards = state.accounts.filter(a => a.type === 'credito');
+    const baseAccounts = state.accounts.filter(a => a.type !== 'credito' && a.type !== 'tarjeta_credito');
+    const creditCards = state.accounts.filter(a => a.type === 'credito' || a.type === 'tarjeta_credito');
 
     // Crear dos secciones principales en el contenedor
     const mainSection = document.createElement('div');
@@ -1877,10 +1898,17 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.background = `linear-gradient(135deg, ${a.color}, ${lightenColor(a.color, -20)})`;
       card.style.color = a.text_color || '#FFFFFF';
       
+      const typeDetails = getAccountTypeDetails(a.type);
       card.innerHTML = `
         <div class="card-top" style="color: ${a.text_color || '#FFFFFF'}">
-          <span class="card-bank-name">${a.bank || 'Efectivo/Digital'}</span>
-          <span class="card-type-chip" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${a.text_color || '#FFFFFF'}; color: ${a.text_color || '#FFFFFF'}">${a.type.replace('_', ' ')}</span>
+          <div style="display: flex; flex-direction: column; text-align: left;">
+            <span class="card-bank-name" style="font-weight: 700; font-size: 1.1rem; line-height: 1.2;">${a.name}</span>
+            <span style="font-size: 0.75rem; opacity: 0.8;">${a.bank || 'Efectivo/Digital'}</span>
+          </div>
+          <span class="card-type-chip" style="align-self: flex-start; background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${a.text_color || '#FFFFFF'}; color: ${a.text_color || '#FFFFFF'}; display: flex; align-items: center; gap: 0.25rem;">
+            <i data-lucide="${typeDetails.icon}" class="icon-small" style="width: 12px; height: 12px;"></i>
+            ${typeDetails.label}
+          </span>
         </div>
         <div class="card-middle" style="color: ${a.text_color || '#FFFFFF'}">
           <span class="card-balance-label" style="color: ${a.text_color || '#FFFFFF'}; opacity: 0.85;">Saldo Estimado</span>
@@ -1896,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       cardWrapper.appendChild(card);
 
-      // Buscar si tiene tarjetas de crédito asociadas
+      // Buscar si tiene tarjetas de crédito/débito asociadas
       const linkedCards = creditCards.filter(c => c.parent_account_id === a.id);
       if (linkedCards.length > 0) {
         const linkedContainer = document.createElement('div');
@@ -1922,22 +1950,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const cCard = document.createElement('div');
           cCard.className = 'bank-card-premium';
-          cCard.style.height = '140px'; // Un poco más pequeña para denotar subordinación
+          cCard.style.height = '145px'; // Un poco más pequeña para denotar subordinación
           cCard.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
           cCard.style.color = c.text_color || '#FFFFFF';
           cCard.style.padding = '1rem';
           
+          const cTypeDetails = getAccountTypeDetails(c.type);
           cCard.innerHTML = `
             <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
-              <span class="card-bank-name" style="font-size: 0.75rem;">${c.bank || 'Tarjeta'}</span>
-              <span class="card-type-chip" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; font-size: 0.6rem; padding: 0.15rem 0.4rem;">${c.type}</span>
+              <div style="display: flex; flex-direction: column; text-align: left;">
+                <span class="card-bank-name" style="font-weight: 700; font-size: 0.95rem; line-height: 1.2;">${c.name}</span>
+                <span style="font-size: 0.65rem; opacity: 0.8;">${c.bank || 'Tarjeta'}</span>
+              </div>
+              <span class="card-type-chip" style="align-self: flex-start; background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; font-size: 0.6rem; padding: 0.15rem 0.4rem; display: flex; align-items: center; gap: 0.2rem;">
+                <i data-lucide="${cTypeDetails.icon}" class="icon-small" style="width: 10px; height: 10px;"></i>
+                ${cTypeDetails.label}
+              </span>
             </div>
-            <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}; margin: 0.5rem 0;">
+            <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}; margin: 0.35rem 0;">
               <span class="card-balance-label" style="font-size: 0.65rem; opacity: 0.85;">Consumo Realizado</span>
-              <span class="card-balance-val amount-sensitive" style="font-size: 1.25rem;">$${Number(cBalance).toFixed(2)}</span>
+              <span class="card-balance-val amount-sensitive" style="font-size: 1.2rem;">$${Number(cBalance).toFixed(2)}</span>
             </div>
             <div class="card-bottom" style="color: ${c.text_color || '#FFFFFF'}">
-              <span class="card-number" style="font-size: 0.85rem;">${cLastFour}</span>
+              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;">
+                <span class="card-number" style="font-size: 0.8rem;">${cLastFour}</span>
+                <div style="font-size: 0.65rem; opacity: 0.85; display: flex; align-items: center; gap: 0.2rem;">
+                  <i data-lucide="link" style="width: 9px; height: 9px;"></i>
+                  <span>Fondo: <strong>${a.name}</strong></span>
+                </div>
+              </div>
               <div class="card-actions-row">
                 <button class="btn-card-action btn-edit-card" data-id="${c.id}" title="Editar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="edit-2" style="width: 12px; height: 12px;"></i></button>
                 <button class="btn-card-action btn-delete-card" data-id="${c.id}" title="Eliminar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>
@@ -1975,10 +2016,17 @@ document.addEventListener('DOMContentLoaded', () => {
         card.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
         card.style.color = c.text_color || '#FFFFFF';
         
+        const typeDetails = getAccountTypeDetails(c.type);
         card.innerHTML = `
           <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
-            <span class="card-bank-name">${c.bank || 'Tarjeta de Crédito'}</span>
-            <span class="card-type-chip" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}">${c.type.replace('_', ' ')}</span>
+            <div style="display: flex; flex-direction: column; text-align: left;">
+              <span class="card-bank-name" style="font-weight: 700; font-size: 1.1rem; line-height: 1.2;">${c.name}</span>
+              <span style="font-size: 0.75rem; opacity: 0.8;">${c.bank || 'Tarjeta de Crédito'}</span>
+            </div>
+            <span class="card-type-chip" style="align-self: flex-start; background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; display: flex; align-items: center; gap: 0.25rem;">
+              <i data-lucide="${typeDetails.icon}" class="icon-small" style="width: 12px; height: 12px;"></i>
+              ${typeDetails.label}
+            </span>
           </div>
           <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}">
             <span class="card-balance-label" style="color: ${c.text_color || '#FFFFFF'}; opacity: 0.85;">Consumo Realizado</span>
@@ -2022,7 +2070,8 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('acc-notes').value = a.notes || '';
           
           if (document.getElementById('group-acc-parent')) {
-            document.getElementById('group-acc-parent').style.display = a.type === 'credito' ? 'block' : 'none';
+            const isCard = a.type === 'credito' || a.type === 'tarjeta_credito' || a.type === 'tarjeta_debito';
+            document.getElementById('group-acc-parent').style.display = isCard ? 'block' : 'none';
           }
           
           form.scrollIntoView({ behavior: 'smooth' });
@@ -2093,7 +2142,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('acc-type').addEventListener('change', (e) => {
     const parentGroup = document.getElementById('group-acc-parent');
     if (parentGroup) {
-      parentGroup.style.display = e.target.value === 'credito' ? 'block' : 'none';
+      const val = e.target.value;
+      parentGroup.style.display = (val === 'credito' || val === 'tarjeta_credito' || val === 'tarjeta_debito') ? 'block' : 'none';
     }
   });
 
