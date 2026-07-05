@@ -154,7 +154,10 @@ hr.divider {
 }
 
 .sidebar-brand {
-  padding: 2rem 1.5rem;
+  padding-top: calc(2rem + env(safe-area-inset-top, 0px));
+  padding-bottom: 2rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -269,8 +272,8 @@ hr.divider {
 
 /* Cabecera Principal */
 #main-header {
-  height: calc(70px + env(safe-area-inset-top, 0px));
-  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(75px + env(safe-area-inset-top, 0px) + 12px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--color-border);
   padding-left: 2rem;
@@ -647,6 +650,10 @@ hr.divider {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+.form-grid .form-group {
+  margin-bottom: 0;
 }
 .form-group.full-width {
   grid-column: 1 / -1;
@@ -1582,7 +1589,8 @@ textarea.input-premium {
   }
   
   #main-header {
-    padding: 0 1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
 }
 
