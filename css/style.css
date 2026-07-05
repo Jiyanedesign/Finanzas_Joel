@@ -154,7 +154,7 @@ hr.divider {
 }
 
 .sidebar-brand {
-  padding-top: calc(2rem + env(safe-area-inset-top, 0px));
+  padding-top: calc(2.5rem + env(safe-area-inset-top, 0px));
   padding-bottom: 2rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
@@ -272,19 +272,27 @@ hr.divider {
 
 /* Cabecera Principal */
 #main-header {
-  height: calc(75px + env(safe-area-inset-top, 0px) + 12px);
-  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--color-border);
   padding-left: 2rem;
   padding-right: 2rem;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   position: sticky;
   top: 0;
   z-index: 90;
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+/* Row real que contiene los botones, por debajo del safe-area-inset */
+.header-inner-row {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .header-left {
@@ -1582,15 +1590,35 @@ textarea.input-premium {
   .charts-row, .calendar-layout-wrapper, .comparison-results-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Formularios en columna única en móvil para que no se corten los inputs */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
   
   #view-container {
-    padding: 1.25rem;
-    padding-bottom: 80px; /* Espacio para barra inferior */
+    padding: 1rem;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
   
   #main-header {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .header-inner-row {
+    height: 54px;
+  }
+
+  /* Pantalla de login: añadir safe area en el espaciado superior */
+  #auth-container {
+    padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Inputs y selects: ancho completo en móvil */
+  .input-premium, .select-premium {
+    font-size: 16px; /* Evita el zoom automático de iOS al enfocar inputs */
   }
 }
 
