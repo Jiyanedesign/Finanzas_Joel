@@ -991,8 +991,96 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     }
 
+    // Pintar Regla de Oro 50/30/20
+    renderRule503020(initialBudget, totalIncomes);
+
     // Pintar Gráficos
     drawDashboardCharts();
+  }
+
+  function renderRule503020(initialBudget, totalIncomes) {
+    const ruleBase = totalIncomes > 0 ? totalIncomes : initialBudget;
+
+    const target50 = ruleBase * 0.50;
+    const target30 = ruleBase * 0.30;
+    const target20 = ruleBase * 0.20;
+
+    let spent50 = 0;
+    let spent30 = 0;
+    let spent20 = 0;
+
+    state.expenses.forEach(e => {
+      if (e.status === 'pagado') {
+        const cat = state.categories.find(c => c.id === e.category_id);
+        const type = cat ? cat.rule_type : 'deseo';
+        
+        if (type === 'necesidad') {
+          spent50 += e.amount;
+        } else if (type === 'ahorro') {
+          spent20 += e.amount;
+        } else {
+          spent30 += e.amount;
+        }
+      }
+    });
+
+    const pct50 = target50 > 0 ? Math.min(100, (spent50 / target50) * 100) : 0;
+    const pct30 = target30 > 0 ? Math.min(100, (spent30 / target30) * 100) : 0;
+    const pct20 = target20 > 0 ? Math.min(100, (spent20 / target20) * 100) : 0;
+
+    const el50t = document.getElementById('rule-50-target-pct');
+    const el30t = document.getElementById('rule-30-target-pct');
+    const el20t = document.getElementById('rule-20-target-pct');
+
+    if (el50t) el50t.textContent = `Límite: ${formatCurrency(target50)}`;
+    if (el30t) el30t.textContent = `Límite: ${formatCurrency(target30)}`;
+    if (el20t) el20t.textContent = `Objetivo: ${formatCurrency(target20)}`;
+
+    const el50s = document.getElementById('rule-50-spent');
+    const el30s = document.getElementById('rule-30-spent');
+    const el20s = document.getElementById('rule-20-spent');
+
+    if (el50s) el50s.textContent = formatCurrency(spent50);
+    if (el30s) el30s.textContent = formatCurrency(spent30);
+    if (el20s) el20s.textContent = formatCurrency(spent20);
+
+    const el50p = document.getElementById('rule-50-percent');
+    const el30p = document.getElementById('rule-30-percent');
+    const el20p = document.getElementById('rule-20-percent');
+
+    if (el50p) el50p.textContent = `${((spent50 / (target50 || 1)) * 100).toFixed(0)}%`;
+    if (el30p) el30p.textContent = `${((spent30 / (target30 || 1)) * 100).toFixed(0)}%`;
+    if (el20p) el20p.textContent = `${((spent20 / (target20 || 1)) * 100).toFixed(0)}%`;
+
+    const p50 = document.getElementById('rule-50-progress');
+    const p30 = document.getElementById('rule-30-progress');
+    const p20 = document.getElementById('rule-20-progress');
+
+    if (p50) {
+      p50.style.width = `${pct50}%`;
+      p50.style.backgroundColor = spent50 > target50 ? 'var(--color-danger)' : '#3B82F6';
+    }
+    if (p30) {
+      p30.style.width = `${pct30}%`;
+      p30.style.backgroundColor = spent30 > target30 ? 'var(--color-danger)' : '#F59E0B';
+    }
+    if (p20) {
+      p20.style.width = `${pct20}%`;
+      p20.style.backgroundColor = spent20 >= target20 ? 'var(--color-success)' : '#10B981';
+    }
+
+    let advice = '';
+    if (spent50 > target50) {
+      advice = '⚠️ <strong>Necesidades Elevadas:</strong> Tus gastos obligatorios superan el 50% recomendado. Considera revisar contratos de servicios, alquiler o compras fijas para liberar flujo.';
+    } else if (spent30 > target30) {
+      advice = '⚠️ <strong>Deseos Excedidos:</strong> Tus consumos variables de entretenimiento o compras superan el 30%. Moderar salidas a restaurantes o pausar suscripciones digitales ayudará a equilibrarlo.';
+    } else if (spent20 < target20) {
+      advice = '🌱 <strong>Bajo Ahorro:</strong> Aún no logras destinar el 20% de tus ingresos a deudas, inversión o fondos de emergencia. Utiliza el simulador de microahorros para acumular capital pasivo.';
+    } else {
+      advice = '🌟 <strong>¡Salud Financiera Excelente!</strong> Tus gastos están en perfecta sintonía con la regla de oro 50/30/20. Sigue administrándote de este modo.';
+    }
+    const adviceEl = document.getElementById('rule-503020-advice');
+    if (adviceEl) adviceEl.innerHTML = advice;
   }
 
   // Gráficos con Chart.js
@@ -2058,6 +2146,7 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('cat-budget').value = c.budget;
           document.getElementById('cat-icon').value = c.icon || 'tag';
           document.getElementById('cat-color').value = c.color;
+          document.getElementById('cat-rule-type').value = c.rule_type || 'deseo';
           document.getElementById('cat-subs').value = c.subcategories ? c.subcategories.map(s => s.name).join(', ') : '';
           
           form.scrollIntoView({ behavior: 'smooth' });
@@ -2096,6 +2185,7 @@ document.addEventListener('DOMContentLoaded', () => {
       budget: parseFloat(document.getElementById('cat-budget').value) || 0,
       icon: document.getElementById('cat-icon').value,
       color: document.getElementById('cat-color').value,
+      rule_type: document.getElementById('cat-rule-type').value,
       subcategories
     };
 

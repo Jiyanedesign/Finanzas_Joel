@@ -551,12 +551,13 @@ try {
             $icon = clean($data['icon'] ?? 'tag');
             $color = clean($data['color'] ?? '#10B981');
             $budget = floatval($data['budget'] ?? 0);
+            $rule_type = clean($data['rule_type'] ?? 'deseo');
             $subcategories = $data['subcategories'] ?? [];
 
             if (empty($name)) throw new Exception('El nombre es obligatorio.');
 
-            $stmt = $pdo->prepare("INSERT INTO categories (user_id, name, icon, color, budget) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $name, $icon, $color, $budget]);
+            $stmt = $pdo->prepare("INSERT INTO categories (user_id, name, icon, color, budget, rule_type) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $name, $icon, $color, $budget, $rule_type]);
             $catId = $pdo->lastInsertId();
 
             $stmtSub = $pdo->prepare("INSERT INTO subcategories (category_id, name) VALUES (?, ?)");
@@ -578,11 +579,12 @@ try {
             $icon = clean($data['icon'] ?? 'tag');
             $color = clean($data['color'] ?? '#10B981');
             $budget = floatval($data['budget'] ?? 0);
+            $rule_type = clean($data['rule_type'] ?? 'deseo');
             $status = clean($data['status'] ?? 'activa');
             $subcategories = $data['subcategories'] ?? [];
 
-            $stmt = $pdo->prepare("UPDATE categories SET name = ?, icon = ?, color = ?, budget = ?, status = ? WHERE id = ? AND user_id = ?");
-            $stmt->execute([$name, $icon, $color, $budget, $status, $id, $_SESSION['user_id']]);
+            $stmt = $pdo->prepare("UPDATE categories SET name = ?, icon = ?, color = ?, budget = ?, rule_type = ?, status = ? WHERE id = ? AND user_id = ?");
+            $stmt->execute([$name, $icon, $color, $budget, $rule_type, $status, $id, $_SESSION['user_id']]);
 
             // Actualizar subcategorías
             $stmtDel = $pdo->prepare("DELETE FROM subcategories WHERE category_id = ?");

@@ -81,6 +81,7 @@ try {
         icon VARCHAR(50) DEFAULT 'tag',
         color VARCHAR(10) DEFAULT '#10B981',
         budget DECIMAL(10,2) DEFAULT 0.00,
+        rule_type VARCHAR(20) DEFAULT 'deseo',
         status VARCHAR(20) DEFAULT 'activa',
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -237,6 +238,10 @@ try {
         $pdo->exec("ALTER TABLE accounts ADD COLUMN text_color VARCHAR(10) DEFAULT '#FFFFFF'");
     } catch (Exception $e) {}
 
+    try {
+        $pdo->exec("ALTER TABLE categories ADD COLUMN rule_type VARCHAR(20) DEFAULT 'deseo'");
+    } catch (Exception $e) {}
+
     echo "<p class='text-success'>✔️ Estructura de tablas MySQL creada correctamente.</p>";
 
     // 2. Sembrar datos
@@ -290,21 +295,21 @@ try {
 
         // Categorías semilla
         $categories = [
-            ['name' => 'Alimentación', 'icon' => 'utensils', 'color' => '#EF4444', 'budget' => 0.0, 'subs' => ['Supermercado', 'Restaurantes', 'Cafés']],
-            ['name' => 'Transporte', 'icon' => 'car', 'color' => '#3B82F6', 'budget' => 0.0, 'subs' => ['Gasolina', 'Taxi/Uber', 'Mantenimiento']],
-            ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#10B981', 'budget' => 0.0, 'subs' => ['Alquiler', 'Servicios básicos', 'Internet', 'Reparaciones']],
-            ['name' => 'Entretenimiento', 'icon' => 'film', 'color' => '#F59E0B', 'budget' => 0.0, 'subs' => ['Cine', 'Suscripciones', 'Salidas']],
-            ['name' => 'Salud', 'icon' => 'heart', 'color' => '#EC4899', 'budget' => 0.0, 'subs' => ['Medicinas', 'Consultas', 'Seguro']],
-            ['name' => 'Educación', 'icon' => 'book', 'color' => '#8B5CF6', 'budget' => 0.0, 'subs' => ['Cursos', 'Libros', 'Materiales']],
-            ['name' => 'Ahorro', 'icon' => 'piggy-bank', 'color' => '#06B6D4', 'budget' => 0.0, 'subs' => ['Fondo Emergencia', 'Inversiones']]
+            ['name' => 'Alimentación', 'icon' => 'utensils', 'color' => '#EF4444', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Supermercado', 'Restaurantes', 'Cafés']],
+            ['name' => 'Transporte', 'icon' => 'car', 'color' => '#3B82F6', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Gasolina', 'Taxi/Uber', 'Mantenimiento']],
+            ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#10B981', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Alquiler', 'Servicios básicos', 'Internet', 'Reparaciones']],
+            ['name' => 'Entretenimiento', 'icon' => 'film', 'color' => '#F59E0B', 'budget' => 0.0, 'rule_type' => 'deseo', 'subs' => ['Cine', 'Suscripciones', 'Salidas']],
+            ['name' => 'Salud', 'icon' => 'heart', 'color' => '#EC4899', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Medicinas', 'Consultas', 'Seguro']],
+            ['name' => 'Educación', 'icon' => 'book', 'color' => '#8B5CF6', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Cursos', 'Libros', 'Materiales']],
+            ['name' => 'Ahorro', 'icon' => 'piggy-bank', 'color' => '#06B6D4', 'budget' => 0.0, 'rule_type' => 'ahorro', 'subs' => ['Fondo Emergencia', 'Inversiones']]
         ];
 
         $categoryIds = [];
-        $stmtCat = $pdo->prepare("INSERT INTO categories (user_id, name, icon, color, budget) VALUES (?, ?, ?, ?, ?)");
+        $stmtCat = $pdo->prepare("INSERT INTO categories (user_id, name, icon, color, budget, rule_type) VALUES (?, ?, ?, ?, ?, ?)");
         $stmtSub = $pdo->prepare("INSERT INTO subcategories (category_id, name) VALUES (?, ?)");
         
         foreach ($categories as $cat) {
-            $stmtCat->execute([$userId, $cat['name'], $cat['icon'], $cat['color'], $cat['budget']]);
+            $stmtCat->execute([$userId, $cat['name'], $cat['icon'], $cat['color'], $cat['budget'], $cat['rule_type']]);
             $catId = $pdo->lastInsertId();
             $categoryIds[$cat['name']] = $catId;
 

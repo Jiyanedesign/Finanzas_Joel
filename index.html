@@ -257,6 +257,66 @@
             </div>
           </div>
 
+          <!-- Planificador y Analizador de Presupuesto 50/30/20 -->
+          <div class="card-premium rule-503020-card" style="margin-top: 1.5rem; border-left: 5px solid #4F46E5;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i data-lucide="pie-chart" style="color: #4F46E5; width: 22px; height: 22px;"></i>
+                <h3 style="margin: 0; font-family: var(--font-headings); font-weight: 700; color: var(--text-primary);">Analizador de Regla de Oro 50/30/20</h3>
+              </div>
+              <span class="text-muted" style="font-size: 0.75rem;">Recomendación teórica basada en tus ingresos reales</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+              <!-- 50%: Necesidades -->
+              <div class="rule-column" style="background: var(--bg-surface); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--color-text);">Necesidades Obligatorias (50%)</span>
+                  <span style="font-size: 0.75rem; color: var(--color-text-muted);" id="rule-50-target-pct">Límite: $0.00</span>
+                </div>
+                <div class="progress-bar-container" style="height: 10px; margin-bottom: 0.5rem;">
+                  <div id="rule-50-progress" class="progress-bar" style="width: 0%; background-color: #3B82F6;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted);">
+                  <span>Gastado: <strong id="rule-50-spent" class="amount-sensitive">$0.00</strong></span>
+                  <span id="rule-50-percent">0%</span>
+                </div>
+              </div>
+
+              <!-- 30%: Deseos -->
+              <div class="rule-column" style="background: var(--bg-surface); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--color-text);">Deseos Opcionales (30%)</span>
+                  <span style="font-size: 0.75rem; color: var(--color-text-muted);" id="rule-30-target-pct">Límite: $0.00</span>
+                </div>
+                <div class="progress-bar-container" style="height: 10px; margin-bottom: 0.5rem;">
+                  <div id="rule-30-progress" class="progress-bar" style="width: 0%; background-color: #F59E0B;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted);">
+                  <span>Gastado: <strong id="rule-30-spent" class="amount-sensitive">$0.00</strong></span>
+                  <span id="rule-30-percent">0%</span>
+                </div>
+              </div>
+
+              <!-- 20%: Ahorros / Deudas -->
+              <div class="rule-column" style="background: var(--bg-surface); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--color-text);">Ahorro y Deudas (20%)</span>
+                  <span style="font-size: 0.75rem; color: var(--color-text-muted);" id="rule-20-target-pct">Objetivo: $0.00</span>
+                </div>
+                <div class="progress-bar-container" style="height: 10px; margin-bottom: 0.5rem;">
+                  <div id="rule-20-progress" class="progress-bar" style="width: 0%; background-color: #10B981;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted);">
+                  <span>Asignado: <strong id="rule-20-spent" class="amount-sensitive">$0.00</strong></span>
+                  <span id="rule-20-percent">0%</span>
+                </div>
+              </div>
+            </div>
+            
+            <p id="rule-503020-advice" style="margin: 1rem 0 0 0; font-size: 0.8rem; line-height: 1.4; color: var(--color-text-muted);"></p>
+          </div>
+
           <!-- Gráficos del Dashboard -->
           <div class="charts-row">
             <div class="chart-card">
@@ -843,6 +903,14 @@
                 <div class="form-group">
                   <label for="cat-color">Color Visual</label>
                   <input type="color" id="cat-color" class="input-premium" value="#10B981">
+                </div>
+                <div class="form-group">
+                  <label for="cat-rule-type">Regla Financiera (50/30/20)</label>
+                  <select id="cat-rule-type" class="input-premium">
+                    <option value="necesidad">Necesidades Obligatorias (50%)</option>
+                    <option value="deseo" selected>Deseos Opcionales (30%)</option>
+                    <option value="ahorro">Ahorros / Deudas / Inversión (20%)</option>
+                  </select>
                 </div>
               </div>
               <div class="form-group full-width">
