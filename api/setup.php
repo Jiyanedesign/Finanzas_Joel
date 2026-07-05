@@ -225,17 +225,16 @@ try {
     $pdo->exec($sqlSchema);
     echo "<p class='text-success'>✔️ Estructura de tablas MySQL creada correctamente.</p>";
 
-    // 2. Sembrar datos si la tabla de usuarios está vacía
+    // 2. Sembrar datos
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
     $userCount = $stmt->fetch()['count'];
 
-    $stmtMCount = $pdo->query("SELECT COUNT(*) as count FROM monthly_configs");
-    $monthCount = $stmtMCount->fetch()['count'];
+    $forceReset = isset($_GET['reset']) && $_GET['reset'] === 'confirm';
 
-    if ($userCount == 0 || $monthCount == 0) {
-        echo "<h2>Sembrando Datos Financieros Iniciales...</h2>";
+    if ($userCount == 0 || $forceReset) {
+        echo "<h2>Restableciendo y Sembrando Datos Limpios...</h2>";
 
-        // Limpiar para evitar duplicados parciales de ejecuciones previas
+        // Limpiar base de datos por completo
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
         $pdo->exec("TRUNCATE TABLE users;");
         $pdo->exec("TRUNCATE TABLE accounts;");
@@ -256,12 +255,12 @@ try {
         $stmtUser->execute(['Joel Administrador', 'admin@admin.com', $passHash, '1234']);
         $userId = $pdo->lastInsertId();
 
-        // Cuentas semilla
+        // Cuentas semilla (con balance inicial de 0.00 para empezar de cero)
         $accounts = [
-            ['name' => 'Efectivo Personal', 'bank' => 'N/A', 'type' => 'efectivo', 'last_four' => null, 'color' => '#F59E0B', 'initial_balance' => 150.0],
-            ['name' => 'Cuenta Ahorros Pichincha', 'bank' => 'Banco Pichincha', 'type' => 'cuenta_bancaria', 'last_four' => '4567', 'color' => '#3B82F6', 'initial_balance' => 1200.0],
+            ['name' => 'Efectivo Personal', 'bank' => 'N/A', 'type' => 'efectivo', 'last_four' => null, 'color' => '#F59E0B', 'initial_balance' => 0.0],
+            ['name' => 'Cuenta Pichincha', 'bank' => 'Banco Pichincha', 'type' => 'cuenta_bancaria', 'last_four' => '4567', 'color' => '#3B82F6', 'initial_balance' => 0.0],
             ['name' => 'Tarjeta Visa Gold', 'bank' => 'Banco Pichincha', 'type' => 'tarjeta_credito', 'last_four' => '9876', 'color' => '#EF4444', 'initial_balance' => 0.0, 'credit_limit' => 2000.0, 'cut' => 15, 'due' => 5],
-            ['name' => 'Billetera Digital Deuna', 'bank' => 'Banco Pichincha', 'type' => 'billetera_digital', 'last_four' => null, 'color' => '#10B981', 'initial_balance' => 50.0]
+            ['name' => 'Billetera Digital Deuna', 'bank' => 'Banco Pichincha', 'type' => 'billetera_digital', 'last_four' => null, 'color' => '#10B981', 'initial_balance' => 0.0]
         ];
 
         $accountIds = [];
@@ -277,13 +276,13 @@ try {
 
         // Categorías semilla
         $categories = [
-            ['name' => 'Alimentación', 'icon' => 'utensils', 'color' => '#EF4444', 'budget' => 200.0, 'subs' => ['Supermercado', 'Restaurantes', 'Cafés']],
-            ['name' => 'Transporte', 'icon' => 'car', 'color' => '#3B82F6', 'budget' => 80.0, 'subs' => ['Gasolina', 'Taxi/Uber', 'Mantenimiento']],
-            ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#10B981', 'budget' => 450.0, 'subs' => ['Alquiler', 'Servicios básicos', 'Internet', 'Reparaciones']],
-            ['name' => 'Entretenimiento', 'icon' => 'film', 'color' => '#F59E0B', 'budget' => 80.0, 'subs' => ['Cine', 'Suscripciones', 'Salidas']],
-            ['name' => 'Salud', 'icon' => 'heart', 'color' => '#EC4899', 'budget' => 50.0, 'subs' => ['Medicinas', 'Consultas', 'Seguro']],
-            ['name' => 'Educación', 'icon' => 'book', 'color' => '#8B5CF6', 'budget' => 100.0, 'subs' => ['Cursos', 'Libros', 'Materiales']],
-            ['name' => 'Ahorro', 'icon' => 'piggy-bank', 'color' => '#06B6D4', 'budget' => 150.0, 'subs' => ['Fondo Emergencia', 'Inversiones']]
+            ['name' => 'Alimentación', 'icon' => 'utensils', 'color' => '#EF4444', 'budget' => 0.0, 'subs' => ['Supermercado', 'Restaurantes', 'Cafés']],
+            ['name' => 'Transporte', 'icon' => 'car', 'color' => '#3B82F6', 'budget' => 0.0, 'subs' => ['Gasolina', 'Taxi/Uber', 'Mantenimiento']],
+            ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#10B981', 'budget' => 0.0, 'subs' => ['Alquiler', 'Servicios básicos', 'Internet', 'Reparaciones']],
+            ['name' => 'Entretenimiento', 'icon' => 'film', 'color' => '#F59E0B', 'budget' => 0.0, 'subs' => ['Cine', 'Suscripciones', 'Salidas']],
+            ['name' => 'Salud', 'icon' => 'heart', 'color' => '#EC4899', 'budget' => 0.0, 'subs' => ['Medicinas', 'Consultas', 'Seguro']],
+            ['name' => 'Educación', 'icon' => 'book', 'color' => '#8B5CF6', 'budget' => 0.0, 'subs' => ['Cursos', 'Libros', 'Materiales']],
+            ['name' => 'Ahorro', 'icon' => 'piggy-bank', 'color' => '#06B6D4', 'budget' => 0.0, 'subs' => ['Fondo Emergencia', 'Inversiones']]
         ];
 
         $categoryIds = [];
@@ -300,85 +299,21 @@ try {
             }
         }
 
-        $stmtMonth = $pdo->prepare("INSERT INTO monthly_configs (user_id, month, year, initial_budget, initial_balance, saving_goal, currency, notes, cycle_start_day, cycle_end_day) VALUES (?, 7, 2026, 1200.00, 1400.00, 200.00, '$', ?, 1, 31)");
-        $stmtMonth->execute([$userId, 'Mes de planificación de prueba - Julio']);
-        $monthConfigId = $pdo->lastInsertId();
-
-        // Obtener subcategorías asociadas
-        $stmtGetSub = $pdo->prepare("SELECT s.id FROM subcategories s JOIN categories c ON s.category_id = c.id WHERE c.name = ? AND s.name = ?");
-        
-        $stmtGetSub->execute(['Alimentación', 'Supermercado']);
-        $subSuper = $stmtGetSub->fetch()['id'] ?? null;
-
-        $stmtGetSub->execute(['Vivienda', 'Alquiler']);
-        $subAlquiler = $stmtGetSub->fetch()['id'] ?? null;
-
-        $stmtGetSub->execute(['Vivienda', 'Internet']);
-        $subInternet = $stmtGetSub->fetch()['id'] ?? null;
-
-        $stmtGetSub->execute(['Transporte', 'Gasolina']);
-        $subGasolina = $stmtGetSub->fetch()['id'] ?? null;
-
-        $stmtGetSub->execute(['Entretenimiento', 'Suscripciones']);
-        $subNetflix = $stmtGetSub->fetch()['id'] ?? null;
-
-        // Sembrar Ingresos
-        $incomes = [
-            ['2026-07-01', 1500.00, 'Sueldo Mensual', 'Transferencia', 'Cuenta Ahorros Pichincha', 'Pago mensual de nómina principal'],
-            ['2026-07-10', 250.00, 'Proyecto Freelance', 'Transferencia', 'Cuenta Ahorros Pichincha', 'Desarrollo de landing page para cliente'],
-            ['2026-07-15', 40.00, 'Reembolso Cena', 'Billetera Digital', 'Billetera Digital Deuna', 'Reembolso por parte de amigos']
-        ];
-        
-        $stmtInc = $pdo->prepare("INSERT INTO incomes (user_id, month_config_id, date, amount, source, receipt_method, account_id, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'recibido')");
-        foreach ($incomes as $inc) {
-            $stmtInc->execute([$userId, $monthConfigId, $inc[0], $inc[1], $inc[2], $inc[3], $accountIds[$inc[4]], $inc[5]]);
-        }
-
-        // Sembrar Gastos
-        $expenses = [
-            ['2026-07-01', '09:00', 400.00, 'Alquiler Departamento', 'Vivienda', $subAlquiler, 'transferencia_bancaria', 'Cuenta Ahorros Pichincha', 'fijo', 'Propietario Juan', 'personal', 'Pago mensual de alquiler'],
-            ['2026-07-03', '14:30', 85.50, 'Compra Semanal Supermercado', 'Alimentación', $subSuper, 'tarjeta_debito', 'Cuenta Ahorros Pichincha', 'variable', 'Supermaxi', 'familia', 'Compra para el hogar'],
-            ['2026-07-05', '18:00', 25.00, 'Tanqueada Combustible', 'Transporte', $subGasolina, 'efectivo', 'Efectivo Personal', 'variable', 'Gasolinera Primax', 'personal', 'Gasolina súper para auto'],
-            ['2026-07-06', '08:00', 40.00, 'Servicio de Internet Fibra', 'Vivienda', $subInternet, 'tarjeta_credito', 'Tarjeta Visa Gold', 'fijo', 'Netlife', 'servicios', 'Internet del hogar'],
-            ['2026-07-12', '20:15', 12.99, 'Mensualidad Netflix', 'Entretenimiento', $subNetflix, 'tarjeta_credito', 'Tarjeta Visa Gold', 'recurrente', 'Netflix', 'suscripciones', 'Suscripción familiar']
-        ];
-
-        $stmtExp = $pdo->prepare("INSERT INTO expenses (user_id, month_config_id, date, time, amount, title, category_id, subcategory_id, payment_method, account_id, expense_type, status, merchant, custom_tag, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pagado', ?, ?, ?)");
-        foreach ($expenses as $exp) {
-            $stmtExp->execute([
-                $userId, $monthConfigId, $exp[0], $exp[1], $exp[2], $exp[3], $categoryIds[$exp[4]], $exp[5], 
-                $exp[6], $accountIds[$exp[7]], $exp[8], $exp[9], $exp[10], $exp[11]
-            ]);
-        }
-
-        // Sembrar deudas
-        $stmtDebt = $pdo->prepare("INSERT INTO debts (user_id, name, lender, total_amount, paid_amount, start_date, due_date, installments_total, installments_paid, installment_value, status, notes) VALUES (?, 'Préstamo Auto', 'Banco Pichincha', 5000.00, 1500.00, '2026-01-10', '2027-12-10', 24, 6, 220.00, 'pendiente', 'Préstamo compra auto.')");
-        $stmtDebt->execute([$userId]);
-
-        // Sembrar metas
-        $stmtGoal = $pdo->prepare("INSERT INTO savings_goals (user_id, name, target_amount, saved_amount, target_date, description, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'en_progreso')");
-        $stmtGoal->execute([$userId, 'Fondo de Emergencia', 2000.00, 800.00, '2026-12-31', '3 meses de gastos cubiertos.', 'alta']);
-        $stmtGoal->execute([$userId, 'Viaje Fin de Año', 1500.00, 300.00, '2026-12-15', 'Vacaciones familiares.', 'media']);
-
-        // Sembrar recurrentes
-        $stmtRec = $pdo->prepare("INSERT INTO recurring_templates (user_id, name, amount, category_id, payment_method, account_id, frequency, next_due_date, notes) VALUES (?, 'Spotify Duo', 8.99, ?, 'tarjeta_credito', ?, 'mensual', '2026-08-01', 'Música premium')");
-        $stmtRec->execute([$userId, $categoryIds['Entretenimiento'], $accountIds['Tarjeta Visa Gold']]);
-
         // Log auditoría
-        $stmtAudit = $pdo->prepare("INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, 'SEED_DATABASE_MYSQL', 'Base de datos MySQL sembrada con éxito en setup.', '127.0.0.1')");
+        $stmtAudit = $pdo->prepare("INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, 'CLEAN_DATABASE_RESET', 'Base de datos MySQL inicializada a cero con plantillas de categorías y cuentas vacías.', '127.0.0.1')");
         $stmtAudit->execute([$userId]);
 
-        echo "<p class='text-success'>✔️ Datos iniciales y credenciales de prueba sembrados correctamente.</p>";
+        echo "<p class='text-success'>✔️ Base de datos restablecida a cero con éxito. Se crearon las plantillas de cuentas y categorías.</p>";
     } else {
-        echo "<p class='text-info'>ℹ️ Los datos ya se encontraban sembrados previamente.</p>";
+        echo "<p class='text-info'>ℹ️ La base de datos ya contiene registros. Si desea borrar todo y restablecerla a cero, acceda a: <code>/api/setup.php?reset=confirm</code></p>";
     }
 
-    echo "<h3>🎉 Instalación completada con éxito. Ya puedes iniciar sesión.</h3>";
+    echo "<h3>🎉 Configuración completada. Ya puedes iniciar sesión desde cero.</h3>";
     echo "<p><a href='/index.html' style='font-size: 1.15rem; font-weight: bold; color: #4F46E5;'>Ir a la Página de Login de AuraFinance</a></p>";
 
 } catch (PDOException $e) {
     echo "<h2 class='text-danger'>❌ Error durante la instalación:</h2>";
     echo "<pre>" . $e->getMessage() . "</pre>";
-    echo "<p>Por favor verifique que la base de datos indicada en <code>api/config.php</code> esté creada en su panel de Hostinger y que los credenciales sean correctos.</p>";
+    echo "<p>Por favor verifique los credenciales y la base de datos MySQL en <code>api/config.php</code>.</p>";
 }
 ?>
