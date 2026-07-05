@@ -272,11 +272,11 @@ hr.divider {
 
 /* Cabecera Principal */
 #main-header {
-  height: 70px;
+  min-height: 56px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: 0 2rem;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding: 0.5rem 2rem;
+  padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
