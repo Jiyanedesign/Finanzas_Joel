@@ -7,6 +7,6 @@ define('DB_PASS', 'Finanzas2026!');
 
 // Configuración general
 define('SESSION_LIFETIME', 86400); // 1 día en segundos
-define('UPLOAD_DIR', __DIR__ . '/../public/uploads/');
+define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('MAX_FILE_SIZE', 5242880); // 5MB
 ?>

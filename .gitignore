@@ -10,9 +10,9 @@ yarn-error.log*
 *.sqlite
 
 # Comprobantes y archivos subidos por usuarios (Subidas privadas/locales)
-public/uploads/*
+uploads/*
 # Permitir subir el directorio pero vacío
-!public/uploads/.gitkeep
+!uploads/.gitkeep
 
 # Entorno y credenciales
 .env
