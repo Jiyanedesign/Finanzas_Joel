@@ -210,6 +210,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // CONFIGURACIÓN DE APIS (LLAMADAS AJAX)
   // ==========================================
+  function sanitizeTypes(data) {
+    if (data === null || data === undefined) return data;
+    if (Array.isArray(data)) {
+      return data.map(item => sanitizeTypes(item));
+    }
+    if (typeof data === 'object') {
+      const numericKeys = [
+        'id', 'user_id', 'month_config_id', 'category_id', 'subcategory_id', 'account_id', 'transaction_id',
+        'month', 'year', 'initial_budget', 'initial_balance', 'saving_goal', 'amount', 'total_amount',
+        'paid_amount', 'saved_amount', 'target_amount', 'installment_value', 'credit_limit', 'file_size',
+        'cycle_start_day', 'cycle_end_day', 'cut_off_day', 'due_day', 'installments_total', 'installments_paid'
+      ];
+      const result = {};
+      for (const key in data) {
+        if (data.hasOwnProperty(key)) {
+          let val = data[key];
+          if (numericKeys.includes(key) && val !== null && val !== '') {
+            result[key] = Number(val);
+          } else if (typeof val === 'object') {
+            result[key] = sanitizeTypes(val);
+          } else {
+            result[key] = val;
+          }
+        }
+      }
+      return result;
+    }
+    return data;
+  }
+
   async function apiCall(url, method = 'GET', data = null, isMultipart = false) {
     let phpUrl = '/api/index.php';
     let action = '';
@@ -344,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!response.ok) {
       throw result;
     }
-    return result;
+    return sanitizeTypes(result);
   }
 
   // ==========================================
