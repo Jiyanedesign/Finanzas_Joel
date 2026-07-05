@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- CSS Principal -->
-  <link rel="stylesheet" href="css/style.css?v=4.0">
+  <link rel="stylesheet" href="css/style.css?v=5.0">
   
   <!-- Lucide Icons (Iconos vectoriales modernos de trazo fino) -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
@@ -107,47 +107,37 @@
       
       <!-- CABECERA PRINCIPAL -->
       <header id="main-header">
-        <div class="header-inner-row">
-          <div class="header-left">
-            <button id="btn-toggle-menu" class="mobile-only-btn" aria-label="Abrir Menú">
-              <i data-lucide="menu"></i>
-            </button>
-            <div class="month-selector-wrapper">
-              <label for="header-month-select"><i data-lucide="calendar" class="icon-small"></i> Mes Financiero:</label>
-              <select id="header-month-select" class="select-premium">
-                <!-- Cargado dinámicamente -->
-              </select>
-            </div>
+        <div class="header-left">
+          <button id="btn-toggle-menu" class="mobile-only-btn" aria-label="Abrir Menú">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="month-selector-wrapper">
+            <label for="header-month-select"><i data-lucide="calendar" class="icon-small"></i> Mes Financiero:</label>
+            <select id="header-month-select" class="select-premium">
+              <!-- Cargado dinámicamente -->
+            </select>
           </div>
-          
-          <div class="header-right">
-            <!-- Botón de Búsqueda Rápida (Ctrl+K) -->
-            <button id="btn-open-search" class="btn-icon-premium" title="Buscador Universal (Ctrl+K)" aria-label="Buscador Universal">
-              <i data-lucide="search"></i>
+        </div>
+        
+        <div class="header-right">
+          <button id="btn-open-search" class="btn-icon-premium" title="Buscador Universal (Ctrl+K)" aria-label="Buscador Universal">
+            <i data-lucide="search"></i>
+          </button>
+          <button id="btn-privacy-mode" class="btn-icon-premium" title="Modo Privacidad (Ocultar Saldos)" aria-label="Modo Privacidad">
+            <i data-lucide="eye" id="privacy-icon"></i>
+          </button>
+          <button id="btn-theme-toggle" class="btn-icon-premium" title="Alternar Modo Oscuro/Claro" aria-label="Cambiar Tema">
+            <i data-lucide="moon" id="theme-icon"></i>
+          </button>
+          <div class="notifications-wrapper">
+            <button id="btn-notifications" class="btn-icon-premium" title="Notificaciones Financieras" aria-label="Alertas">
+              <i data-lucide="bell"></i>
+              <span class="badge-dot hidden" id="notif-badge"></span>
             </button>
-
-            <!-- Botón de Modo Privacidad -->
-            <button id="btn-privacy-mode" class="btn-icon-premium" title="Modo Privacidad (Ocultar Saldos)" aria-label="Modo Privacidad">
-              <i data-lucide="eye" id="privacy-icon"></i>
-            </button>
-            
-            <!-- Botón Modo Oscuro/Claro -->
-            <button id="btn-theme-toggle" class="btn-icon-premium" title="Alternar Modo Oscuro/Claro" aria-label="Cambiar Tema">
-              <i data-lucide="moon" id="theme-icon"></i>
-            </button>
-            
-            <!-- Campana de Alertas -->
-            <div class="notifications-wrapper">
-              <button id="btn-notifications" class="btn-icon-premium" title="Notificaciones Financieras" aria-label="Alertas">
-                <i data-lucide="bell"></i>
-                <span class="badge-dot hidden" id="notif-badge"></span>
-              </button>
-              <div class="notifications-dropdown hidden" id="notifications-dropdown">
-                <div class="dropdown-header">Notificaciones Financieras</div>
-                <div class="dropdown-content" id="notifications-list">
-                  <!-- Cargado dinámicamente -->
-                  <div class="empty-notif">No hay alertas activas en este momento.</div>
-                </div>
+            <div class="notifications-dropdown hidden" id="notifications-dropdown">
+              <div class="dropdown-header">Notificaciones Financieras</div>
+              <div class="dropdown-content" id="notifications-list">
+                <div class="empty-notif">No hay alertas activas en este momento.</div>
               </div>
             </div>
           </div>
@@ -1689,6 +1679,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=4.0"></script>
+  <script src="js/app.js?v=5.0"></script>
 </body>
 </html>
