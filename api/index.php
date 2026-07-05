@@ -474,16 +474,18 @@ try {
             $type = clean($data['type'] ?? '');
             $last_four = clean($data['last_four'] ?? '');
             $color = clean($data['color'] ?? '#4F46E5');
+            $text_color = clean($data['text_color'] ?? '#FFFFFF');
             $balance = floatval($data['initial_balance'] ?? 0);
             $limit = floatval($data['credit_limit'] ?? 0);
             $cut = intval($data['cut_off_day'] ?? null);
             $due = intval($data['due_day'] ?? null);
             $notes = clean($data['notes'] ?? '');
+            $parent_account_id = isset($data['parent_account_id']) && $data['parent_account_id'] !== '' ? intval($data['parent_account_id']) : null;
 
             if (empty($name) || empty($type)) throw new Exception('Nombre y tipo de cuenta requeridos.');
 
-            $stmt = $pdo->prepare("INSERT INTO accounts (user_id, name, bank, type, last_four, color, initial_balance, credit_limit, cut_off_day, due_day, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $name, $bank, $type, $last_four ?: null, $color, $balance, $limit, $cut ?: null, $due ?: null, $notes]);
+            $stmt = $pdo->prepare("INSERT INTO accounts (user_id, name, bank, type, last_four, color, text_color, initial_balance, credit_limit, cut_off_day, due_day, notes, parent_account_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $name, $bank, $type, $last_four ?: null, $color, $text_color, $balance, $limit, $cut ?: null, $due ?: null, $notes, $parent_account_id]);
 
             logActivity($pdo, $_SESSION['user_id'], 'CREATE_ACCOUNT', "Cuenta creada: {$name}");
             echo json_encode(['message' => 'Cuenta/Tarjeta creada con éxito.']);
@@ -498,15 +500,17 @@ try {
             $type = clean($data['type'] ?? '');
             $last_four = clean($data['last_four'] ?? '');
             $color = clean($data['color'] ?? '#4F46E5');
+            $text_color = clean($data['text_color'] ?? '#FFFFFF');
             $balance = floatval($data['initial_balance'] ?? 0);
             $limit = floatval($data['credit_limit'] ?? 0);
             $cut = intval($data['cut_off_day'] ?? null);
             $due = intval($data['due_day'] ?? null);
             $status = clean($data['status'] ?? 'activa');
             $notes = clean($data['notes'] ?? '');
+            $parent_account_id = isset($data['parent_account_id']) && $data['parent_account_id'] !== '' ? intval($data['parent_account_id']) : null;
 
-            $stmt = $pdo->prepare("UPDATE accounts SET name = ?, bank = ?, type = ?, last_four = ?, color = ?, initial_balance = ?, credit_limit = ?, cut_off_day = ?, due_day = ?, status = ?, notes = ? WHERE id = ? AND user_id = ?");
-            $stmt->execute([$name, $bank, $type, $last_four ?: null, $color, $balance, $limit, $cut ?: null, $due ?: null, $status, $notes, $id, $_SESSION['user_id']]);
+            $stmt = $pdo->prepare("UPDATE accounts SET name = ?, bank = ?, type = ?, last_four = ?, color = ?, text_color = ?, initial_balance = ?, credit_limit = ?, cut_off_day = ?, due_day = ?, status = ?, notes = ?, parent_account_id = ? WHERE id = ? AND user_id = ?");
+            $stmt->execute([$name, $bank, $type, $last_four ?: null, $color, $text_color, $balance, $limit, $cut ?: null, $due ?: null, $status, $notes, $parent_account_id, $id, $_SESSION['user_id']]);
 
             logActivity($pdo, $_SESSION['user_id'], 'UPDATE_ACCOUNT', "Cuenta actualizada: {$name}");
             echo json_encode(['message' => 'Cuenta/Tarjeta actualizada con éxito.']);

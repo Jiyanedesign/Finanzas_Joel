@@ -61,14 +61,17 @@ try {
         type VARCHAR(50) NOT NULL,
         last_four VARCHAR(4),
         color VARCHAR(10) DEFAULT '#4F46E5',
+        text_color VARCHAR(10) DEFAULT '#FFFFFF',
         initial_balance DECIMAL(10,2) DEFAULT 0.00,
         credit_limit DECIMAL(10,2) DEFAULT 0.00,
         cut_off_day INT,
         due_day INT,
         status VARCHAR(20) DEFAULT 'activa',
         notes TEXT,
+        parent_account_id INT DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_account_id) REFERENCES accounts(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
     CREATE TABLE IF NOT EXISTS categories (
@@ -223,6 +226,17 @@ try {
     ";
 
     $pdo->exec($sqlSchema);
+    
+    // Migraciones dinámicas de base de datos para nuevas columnas
+    try {
+        $pdo->exec("ALTER TABLE accounts ADD COLUMN parent_account_id INT DEFAULT NULL");
+        $pdo->exec("ALTER TABLE accounts ADD FOREIGN KEY (parent_account_id) REFERENCES accounts(id) ON DELETE SET NULL");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE accounts ADD COLUMN text_color VARCHAR(10) DEFAULT '#FFFFFF'");
+    } catch (Exception $e) {}
+
     echo "<p class='text-success'>✔️ Estructura de tablas MySQL creada correctamente.</p>";
 
     // 2. Sembrar datos

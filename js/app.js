@@ -653,6 +653,21 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.appendChild(opt);
       });
     });
+
+    // Poblar selector de cuenta padre (para vincular tarjetas)
+    const parentAccSelect = document.getElementById('acc-parent-id');
+    if (parentAccSelect) {
+      parentAccSelect.innerHTML = '<option value="">Ninguna (Tarjeta Directa)</option>';
+      state.accounts.forEach(a => {
+        // Solo vincular a cuentas que no sean crédito
+        if (a.type !== 'credito') {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = `${a.name} (${a.type.replace('_', ' ')})`;
+          parentAccSelect.appendChild(opt);
+        }
+      });
+    }
   }
 
   // Cambio de mes financiero activo
@@ -1551,6 +1566,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     form.reset();
     document.getElementById('account-id-field').value = '';
+    if (document.getElementById('group-acc-parent')) {
+      document.getElementById('group-acc-parent').style.display = 'none';
+    }
+    if (document.getElementById('acc-text-color')) {
+      document.getElementById('acc-text-color').value = '#FFFFFF';
+    }
     container.innerHTML = '';
 
     if (state.accounts.length === 0) {
@@ -1558,37 +1579,155 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    state.accounts.forEach(a => {
-      // Calcular métricas específicas de esta cuenta (gastos e ingresos que afectaron la cuenta)
-      const spent = state.expenses.reduce((acc, e) => (e.status === 'pagado' && e.account_id === a.id) ? acc + e.amount : acc, 0);
-      const received = state.incomes.reduce((acc, i) => (i.status === 'recibido' && i.account_id === a.id) ? acc + i.amount : acc, 0);
-      const activeBalance = a.initial_balance; // El backend actualiza balance al procesar ingresos/gastos
-      
+    // Separar en cuentas base (no credito) y tarjetas de credito
+    const baseAccounts = state.accounts.filter(a => a.type !== 'credito');
+    const creditCards = state.accounts.filter(a => a.type === 'credito');
+
+    // Crear dos secciones principales en el contenedor
+    const mainSection = document.createElement('div');
+    mainSection.className = 'accounts-section-group';
+    mainSection.style.width = '100%';
+    mainSection.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">Cuentas Bancarias, Billeteras y Efectivo</h3>';
+    
+    const baseGrid = document.createElement('div');
+    baseGrid.className = 'accounts-visual-list';
+    mainSection.appendChild(baseGrid);
+    container.appendChild(mainSection);
+
+    // Pintar las cuentas base
+    baseAccounts.forEach(a => {
+      const activeBalance = a.initial_balance;
       const lastFourStr = a.last_four ? `•••• •••• •••• ${a.last_four}` : 'CUENTA VIRTUAL';
+
+      const cardWrapper = document.createElement('div');
+      cardWrapper.className = 'account-card-wrapper';
+      cardWrapper.style.display = 'flex';
+      cardWrapper.style.flexDirection = 'column';
+      cardWrapper.style.gap = '1rem';
 
       const card = document.createElement('div');
       card.className = 'bank-card-premium';
       card.style.background = `linear-gradient(135deg, ${a.color}, ${lightenColor(a.color, -20)})`;
+      card.style.color = a.text_color || '#FFFFFF';
       
       card.innerHTML = `
-        <div class="card-top">
+        <div class="card-top" style="color: ${a.text_color || '#FFFFFF'}">
           <span class="card-bank-name">${a.bank || 'Efectivo/Digital'}</span>
-          <span class="card-type-chip">${a.type.replace('_', ' ')}</span>
+          <span class="card-type-chip" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${a.text_color || '#FFFFFF'}; color: ${a.text_color || '#FFFFFF'}">${a.type.replace('_', ' ')}</span>
         </div>
-        <div class="card-middle">
-          <span class="card-balance-label">Saldo Estimado</span>
+        <div class="card-middle" style="color: ${a.text_color || '#FFFFFF'}">
+          <span class="card-balance-label" style="color: ${a.text_color || '#FFFFFF'}; opacity: 0.85;">Saldo Estimado</span>
           <span class="card-balance-val amount-sensitive">$${Number(activeBalance).toFixed(2)}</span>
         </div>
-        <div class="card-bottom">
+        <div class="card-bottom" style="color: ${a.text_color || '#FFFFFF'}">
           <span class="card-number">${lastFourStr}</span>
           <div class="card-actions-row">
-            <button class="btn-card-action btn-edit-card" data-id="${a.id}" title="Editar"><i data-lucide="edit-2"></i></button>
-            <button class="btn-card-action btn-delete-card" data-id="${a.id}" title="Eliminar"><i data-lucide="trash-2"></i></button>
+            <button class="btn-card-action btn-edit-card" data-id="${a.id}" title="Editar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="edit-2"></i></button>
+            <button class="btn-card-action btn-delete-card" data-id="${a.id}" title="Eliminar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="trash-2"></i></button>
           </div>
         </div>
       `;
-      container.appendChild(card);
+      cardWrapper.appendChild(card);
+
+      // Buscar si tiene tarjetas de crédito asociadas
+      const linkedCards = creditCards.filter(c => c.parent_account_id === a.id);
+      if (linkedCards.length > 0) {
+        const linkedContainer = document.createElement('div');
+        linkedContainer.className = 'linked-cards-container';
+        linkedContainer.style.paddingLeft = '1.5rem';
+        linkedContainer.style.borderLeft = '3px dashed var(--accent-color)';
+        linkedContainer.style.display = 'flex';
+        linkedContainer.style.flexDirection = 'column';
+        linkedContainer.style.gap = '0.75rem';
+        linkedContainer.style.marginTop = '0.5rem';
+
+        const label = document.createElement('div');
+        label.style.fontSize = '0.75rem';
+        label.style.fontWeight = 'bold';
+        label.style.textTransform = 'uppercase';
+        label.style.color = 'var(--text-muted)';
+        label.innerHTML = '💳 Tarjetas Vinculadas:';
+        linkedContainer.appendChild(label);
+
+        linkedCards.forEach(c => {
+          const cBalance = c.initial_balance;
+          const cLastFour = c.last_four ? `•••• •••• •••• ${c.last_four}` : 'TARJETA';
+
+          const cCard = document.createElement('div');
+          cCard.className = 'bank-card-premium';
+          cCard.style.height = '140px'; // Un poco más pequeña para denotar subordinación
+          cCard.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
+          cCard.style.color = c.text_color || '#FFFFFF';
+          cCard.style.padding = '1rem';
+          
+          cCard.innerHTML = `
+            <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
+              <span class="card-bank-name" style="font-size: 0.75rem;">${c.bank || 'Tarjeta'}</span>
+              <span class="card-type-chip" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}; font-size: 0.6rem; padding: 0.15rem 0.4rem;">${c.type}</span>
+            </div>
+            <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}; margin: 0.5rem 0;">
+              <span class="card-balance-label" style="font-size: 0.65rem; opacity: 0.85;">Consumo Realizado</span>
+              <span class="card-balance-val amount-sensitive" style="font-size: 1.25rem;">$${Number(cBalance).toFixed(2)}</span>
+            </div>
+            <div class="card-bottom" style="color: ${c.text_color || '#FFFFFF'}">
+              <span class="card-number" style="font-size: 0.85rem;">${cLastFour}</span>
+              <div class="card-actions-row">
+                <button class="btn-card-action btn-edit-card" data-id="${c.id}" title="Editar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="edit-2" style="width: 12px; height: 12px;"></i></button>
+                <button class="btn-card-action btn-delete-card" data-id="${c.id}" title="Eliminar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}; width: 26px; height: 26px;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>
+              </div>
+            </div>
+          `;
+          linkedContainer.appendChild(cCard);
+        });
+        cardWrapper.appendChild(linkedContainer);
+      }
+
+      baseGrid.appendChild(cardWrapper);
     });
+
+    // Ahora, pintar las tarjetas de crédito independientes (no asociadas a ninguna cuenta)
+    const independentCards = creditCards.filter(c => !c.parent_account_id);
+    if (independentCards.length > 0) {
+      const creditSection = document.createElement('div');
+      creditSection.className = 'accounts-section-group';
+      creditSection.style.width = '100%';
+      creditSection.style.marginTop = '3rem';
+      creditSection.innerHTML = '<h3 class="section-group-title" style="margin-bottom: 1rem; color: var(--text-primary); font-family: var(--font-headings); font-weight: 700;">Tarjetas de Crédito Independientes</h3>';
+      
+      const creditGrid = document.createElement('div');
+      creditGrid.className = 'accounts-visual-list';
+      creditSection.appendChild(creditGrid);
+      container.appendChild(creditSection);
+
+      independentCards.forEach(c => {
+        const activeBalance = c.initial_balance;
+        const lastFourStr = c.last_four ? `•••• •••• •••• ${c.last_four}` : 'CUENTA VIRTUAL';
+
+        const card = document.createElement('div');
+        card.className = 'bank-card-premium';
+        card.style.background = `linear-gradient(135deg, ${c.color}, ${lightenColor(c.color, -20)})`;
+        card.style.color = c.text_color || '#FFFFFF';
+        
+        card.innerHTML = `
+          <div class="card-top" style="color: ${c.text_color || '#FFFFFF'}">
+            <span class="card-bank-name">${c.bank || 'Tarjeta de Crédito'}</span>
+            <span class="card-type-chip" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; border: 1px solid ${c.text_color || '#FFFFFF'}; color: ${c.text_color || '#FFFFFF'}">${c.type.replace('_', ' ')}</span>
+          </div>
+          <div class="card-middle" style="color: ${c.text_color || '#FFFFFF'}">
+            <span class="card-balance-label" style="color: ${c.text_color || '#FFFFFF'}; opacity: 0.85;">Consumo Realizado</span>
+            <span class="card-balance-val amount-sensitive">$${Number(activeBalance).toFixed(2)}</span>
+          </div>
+          <div class="card-bottom" style="color: ${c.text_color || '#FFFFFF'}">
+            <span class="card-number">${lastFourStr}</span>
+            <div class="card-actions-row">
+              <button class="btn-card-action btn-edit-card" data-id="${c.id}" title="Editar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}"><i data-lucide="edit-2"></i></button>
+              <button class="btn-card-action btn-delete-card" data-id="${c.id}" title="Eliminar" style="background-color: ${c.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${c.text_color || '#FFFFFF'}"><i data-lucide="trash-2"></i></button>
+            </div>
+          </div>
+        `;
+        creditGrid.appendChild(card);
+      });
+    }
 
     // Eventos tarjetas
     document.querySelectorAll('.btn-edit-card').forEach(btn => {
@@ -1606,8 +1745,18 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('acc-cut-day').value = a.cut_off_day || '';
           document.getElementById('acc-due-day').value = a.due_day || '';
           document.getElementById('acc-color').value = a.color;
+          if (document.getElementById('acc-text-color')) {
+            document.getElementById('acc-text-color').value = a.text_color || '#FFFFFF';
+          }
+          if (document.getElementById('acc-parent-id')) {
+            document.getElementById('acc-parent-id').value = a.parent_account_id || '';
+          }
           document.getElementById('acc-status').value = a.status;
           document.getElementById('acc-notes').value = a.notes || '';
+          
+          if (document.getElementById('group-acc-parent')) {
+            document.getElementById('group-acc-parent').style.display = a.type === 'credito' ? 'block' : 'none';
+          }
           
           form.scrollIntoView({ behavior: 'smooth' });
         }
@@ -1637,6 +1786,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('form-account').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('account-id-field').value;
+    const parentIdField = document.getElementById('acc-parent-id');
+    const textColorField = document.getElementById('acc-text-color');
     const data = {
       name: document.getElementById('acc-name').value,
       bank: document.getElementById('acc-bank').value,
@@ -1647,6 +1798,8 @@ document.addEventListener('DOMContentLoaded', () => {
       cut_off_day: parseInt(document.getElementById('acc-cut-day').value) || null,
       due_day: parseInt(document.getElementById('acc-due-day').value) || null,
       color: document.getElementById('acc-color').value,
+      text_color: textColorField ? textColorField.value : '#FFFFFF',
+      parent_account_id: parentIdField && parentIdField.value !== '' ? parseInt(parentIdField.value) : null,
       status: document.getElementById('acc-status').value,
       notes: document.getElementById('acc-notes').value
     };
@@ -1668,6 +1821,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-cancel-account').addEventListener('click', () => {
     renderTarjetas();
+  });
+
+  document.getElementById('acc-type').addEventListener('change', (e) => {
+    const parentGroup = document.getElementById('group-acc-parent');
+    if (parentGroup) {
+      parentGroup.style.display = e.target.value === 'credito' ? 'block' : 'none';
+    }
   });
 
   // ==========================================

@@ -737,8 +737,19 @@
                   <input type="number" id="acc-due-day" class="input-premium" min="1" max="31">
                 </div>
                 <div class="form-group">
-                  <label for="acc-color">Color Identificador</label>
+                  <label for="acc-color">Color de Tarjeta</label>
                   <input type="color" id="acc-color" class="input-premium" value="#4F46E5">
+                </div>
+                <div class="form-group">
+                  <label for="acc-text-color">Color de Texto</label>
+                  <input type="color" id="acc-text-color" class="input-premium" value="#FFFFFF">
+                </div>
+                <div class="form-group" id="group-acc-parent" style="display: none;">
+                  <label for="acc-parent-id">Cuenta de Pago Vinculada</label>
+                  <select id="acc-parent-id" class="input-premium">
+                    <option value="">Ninguna (Tarjeta Directa)</option>
+                    <!-- Cargado dinámicamente -->
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="acc-status">Estado</label>
