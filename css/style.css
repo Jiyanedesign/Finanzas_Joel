@@ -1551,6 +1551,15 @@ textarea.input-premium {
   display: none;
 }
 
+/* Overlay del sidebar — siempre oculto por defecto, solo visible en móvil */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 140;
+}
+
 /* Botón flotante móvil */
 #mobile-floating-action {
   display: none;
@@ -1576,15 +1585,6 @@ textarea.input-premium {
     left: 0;
   }
 
-  /* Overlay oscuro detrás del sidebar */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 140;
-    animation: fadeIn 0.2s ease;
-  }
   .sidebar-overlay.visible {
     display: block;
   }
