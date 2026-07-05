@@ -481,8 +481,35 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Alternar Menu Lateral en Móvil
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+  function openSidebar() {
+    els.sidebar.classList.add('open');
+    if (sidebarOverlay) sidebarOverlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    els.sidebar.classList.remove('open');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
   els.btnToggleMenu.addEventListener('click', () => {
-    els.sidebar.classList.toggle('open');
+    if (els.sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
+  }
+
+  // Cerrar sidebar al seleccionar un ítem de navegación en móvil
+  els.navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 900) closeSidebar();
+    });
   });
 
   // ==========================================
