@@ -218,6 +218,38 @@ try {
             echo json_encode(['message' => empty($pin) ? 'PIN desactivado.' : 'PIN configurado con éxito.']);
             break;
 
+        case 'update-profile':
+            requireAuth();
+            $data = getJsonInput();
+            $name = clean($data['name'] ?? '');
+            $email = clean($data['email'] ?? '');
+
+            if (empty($name) || empty($email)) {
+                throw new Exception('Nombre y email son requeridos.');
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('El formato del correo electrónico es inválido.');
+            }
+
+            // Comprobar si el correo ya está registrado por otro usuario
+            $stmtCheck = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $stmtCheck->execute([$email, $_SESSION['user_id']]);
+            if ($stmtCheck->fetch()) {
+                throw new Exception('Este correo electrónico ya está en uso por otra cuenta.');
+            }
+
+            // Actualizar usuario
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
+            $stmt->execute([$name, $email, $_SESSION['user_id']]);
+
+            $_SESSION['user_name'] = $name;
+            $_SESSION['user_email'] = $email;
+
+            logActivity($pdo, $_SESSION['user_id'], 'UPDATE_PROFILE', "Perfil actualizado. Nuevo correo: {$email}");
+            echo json_encode(['message' => 'Perfil actualizado con éxito.']);
+            break;
+
         case 'change-password':
             requireAuth();
             $data = getJsonInput();

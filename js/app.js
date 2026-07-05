@@ -224,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (url.startsWith('/api/auth/change-pin')) action = 'change-pin';
     else if (url.startsWith('/api/auth/change-password')) action = 'change-password';
     else if (url.startsWith('/api/auth/recover-password')) action = 'recover-password';
+    else if (url.startsWith('/api/auth/update-profile')) action = 'update-profile';
     else if (url.startsWith('/api/months/compare')) {
       action = 'compare_months';
       const q = url.split('?')[1];
@@ -513,6 +514,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar Modo Privacidad
     state.privacyMode = localStorage.getItem('privacy_mode') === 'true';
     
+    // Mostrar información visual del usuario en el Sidebar
+    if (state.user) {
+      document.getElementById('sidebar-user-name').textContent = state.user.name;
+      document.getElementById('sidebar-avatar').textContent = state.user.name.charAt(0).toUpperCase();
+    }
+
     // Obtener datos iniciales del usuario
     await loadUserConfigs();
   }
@@ -2621,7 +2628,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('form-profile-settings').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('profile-name').value;
-    alertSuccess('Perfil actualizado (simulado en local).');
+    const email = document.getElementById('profile-email').value;
+
+    try {
+      const res = await apiCall('/api/auth/update-profile', 'POST', { name, email });
+      alertSuccess(res.message);
+      state.user.name = name;
+      state.user.email = email;
+      
+      // Actualizar sidebar
+      document.getElementById('sidebar-user-name').textContent = name;
+      document.getElementById('sidebar-avatar').textContent = name.charAt(0).toUpperCase();
+    } catch (err) {
+      alertError(err.error || 'Error al actualizar perfil.');
+    }
   });
 
   // Cambiar Contraseña
