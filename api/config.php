@@ -1,9 +1,9 @@
 <?php
 // Configuración de la base de datos MySQL (Hostinger / Localhost)
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'aura_finance');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', '127.0.0.1'); 
+define('DB_NAME', 'u434851126_finanzas');
+define('DB_USER', 'u434851126_finanzas_usr');
+define('DB_PASS', 'Finanzas2026!');
 
 // Configuración general
 define('SESSION_LIFETIME', 86400); // 1 día en segundos
