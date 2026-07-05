@@ -775,11 +775,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const savingGoal = state.activeMonthConfig.saving_goal;
     const savingsSaved = state.savings.reduce((acc, s) => acc + s.saved_amount, 0);
     
+    // Safe-to-Spend (Dinero Libre de Culpa)
+    const safeToSpend = availableBalance - pendingExpenses - savingGoal;
+
     // KPI UI Updates
     document.getElementById('kpi-initial-budget').textContent = formatCurrency(initialBudget);
     document.getElementById('kpi-total-incomes').textContent = formatCurrency(totalIncomes);
     document.getElementById('kpi-total-expenses').textContent = formatCurrency(totalExpenses);
     document.getElementById('kpi-available-balance').textContent = formatCurrency(availableBalance);
+    
+    // Set Safe-to-Spend KPI Card values
+    const safeToSpendEl = document.getElementById('kpi-safe-to-spend');
+    const safeToSpendStatus = document.getElementById('kpi-safe-to-spend-status');
+    if (safeToSpendEl) {
+      safeToSpendEl.textContent = formatCurrency(safeToSpend);
+      if (safeToSpend > 0) {
+        safeToSpendStatus.textContent = "Libre de deudas y ahorros";
+        safeToSpendStatus.style.color = "#10B981";
+      } else if (safeToSpend === 0) {
+        safeToSpendStatus.textContent = "En el límite justo del mes";
+        safeToSpendStatus.style.color = "var(--text-muted)";
+      } else {
+        safeToSpendStatus.textContent = "Presupuesto del mes comprometido";
+        safeToSpendStatus.style.color = "var(--color-danger)";
+      }
+    }
     
     // Secondary KPIs
     document.getElementById('kpi-month-saving').textContent = formatCurrency(savingsSaved);
@@ -834,10 +854,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.getElementById('kpi-top-category').textContent = topCat;
 
-    // Promedio Diario y Proyección
-    const daysInMonth = getDaysInMonth(state.activeMonthConfig.month, state.activeMonthConfig.year);
-    const dailyAverage = totalExpenses / daysInMonth;
-    document.getElementById('kpi-daily-average').textContent = formatCurrency(dailyAverage);
+    // Promedio Diario basado en tiempo transcurrido real
+    const now = new Date();
+    const activeMonth = state.activeMonthConfig.month;
+    const activeYear = state.activeMonthConfig.year;
+    const daysInMonth = getDaysInMonth(activeMonth, activeYear);
+    
+    let elapsedDays = daysInMonth;
+    if (now.getFullYear() === activeYear && (now.getMonth() + 1) === activeMonth) {
+      elapsedDays = now.getDate();
+    } else if (now.getFullYear() < activeYear || (now.getFullYear() === activeYear && (now.getMonth() + 1) < activeMonth)) {
+      elapsedDays = 0; // Periodo futuro
+    }
+    const currentDay = elapsedDays > 0 ? elapsedDays : 1;
+    const realDailyAverage = totalExpenses / currentDay;
+    const projectedExpenses = realDailyAverage * daysInMonth;
+    
+    document.getElementById('kpi-daily-average').textContent = formatCurrency(realDailyAverage);
+
+    // Calcular desviación y proyecciones
+    const timeProgress = (currentDay / daysInMonth) * 100;
+    const budgetProgress = initialBudget > 0 ? (totalExpenses / initialBudget) * 100 : 0;
+
+    // Microahorros acumulados estimados por redondeo
+    let potentialRoundupSavings = 0;
+    state.expenses.forEach(e => {
+      if (e.status === 'pagado') {
+        const amt = Number(e.amount);
+        const rounded = Math.ceil(amt);
+        potentialRoundupSavings += (rounded - amt);
+      }
+    });
+
+    // Pintar Panel Inteligente de Asistente Aura
+    const auraContainer = document.getElementById('aura-insights-container');
+    if (auraContainer) {
+      auraContainer.innerHTML = '';
+      
+      // Insight 1: Proyección de Fin de Mes
+      const cardProj = document.createElement('div');
+      cardProj.className = 'aura-insight-item';
+      cardProj.style.background = 'var(--bg-card)';
+      cardProj.style.padding = '1rem';
+      cardProj.style.borderRadius = 'var(--radius-sm)';
+      cardProj.style.border = '1px solid var(--border-color)';
+      
+      let projText = '';
+      let projIcon = '';
+      let projColor = '';
+      if (projectedExpenses > initialBudget) {
+        const diff = projectedExpenses - initialBudget;
+        projText = `<strong>Riesgo de Sobregasto</strong>: Al ritmo actual de gasto ($${formatCurrency(realDailyAverage)}/día), terminarás el mes con un gasto proyectado de <strong>${formatCurrency(projectedExpenses)}</strong>, superando tu presupuesto inicial por <strong>${formatCurrency(diff)}</strong>.`;
+        projIcon = 'trending-up';
+        projColor = 'var(--color-danger)';
+      } else {
+        const savings = initialBudget - projectedExpenses;
+        projText = `<strong>Presupuesto Saludable</strong>: Tu proyección para fin de mes es de <strong>${formatCurrency(projectedExpenses)}</strong>, lo que te permitirá ahorrar <strong>${formatCurrency(savings)}</strong> de tu presupuesto original de <strong>${formatCurrency(initialBudget)}</strong>.`;
+        projIcon = 'trending-down';
+        projColor = 'var(--color-success)';
+      }
+      
+      cardProj.innerHTML = `
+        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+          <div style="background: ${projColor}15; color: ${projColor}; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="${projIcon}" style="width: 18px; height: 18px;"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; font-family: var(--font-headings); font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Proyección Mensual</h4>
+            <p style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">${projText}</p>
+          </div>
+        </div>
+      `;
+      auraContainer.appendChild(cardProj);
+      
+      // Insight 2: Desviación del Ciclo
+      const cardDev = document.createElement('div');
+      cardDev.className = 'aura-insight-item';
+      cardDev.style.background = 'var(--bg-card)';
+      cardDev.style.padding = '1rem';
+      cardDev.style.borderRadius = 'var(--radius-sm)';
+      cardDev.style.border = '1px solid var(--border-color)';
+      
+      let devText = '';
+      let devIcon = '';
+      let devColor = '';
+      if (budgetProgress > timeProgress + 15) {
+        devText = `<strong>Consumo Acelerado</strong>: Has consumido el <strong>${Number(budgetProgress).toFixed(0)}%</strong> de tu presupuesto en solo el <strong>${Number(timeProgress).toFixed(0)}%</strong> del tiempo mensual. Moderar los gastos variables es una excelente recomendación.`;
+        devIcon = 'alert-triangle';
+        devColor = 'var(--color-warning)';
+      } else if (budgetProgress <= timeProgress + 15 && budgetProgress > timeProgress) {
+        devText = `<strong>Gasto Estable</strong>: Tu ritmo de gasto está ligeramente por encima de la media del tiempo transcurrido (consumido: <strong>${Number(budgetProgress).toFixed(0)}%</strong>, tiempo: <strong>${Number(timeProgress).toFixed(0)}%</strong>). Vas por buen camino, mantente atento.`;
+        devIcon = 'info';
+        devColor = 'var(--color-primary)';
+      } else {
+        devText = `<strong>Excelente Control</strong>: Tu ritmo de gasto está por debajo del promedio del tiempo transcurrido (consumido: <strong>${Number(budgetProgress).toFixed(0)}%</strong>, tiempo transcurrido: <strong>${Number(timeProgress).toFixed(0)}%</strong>). ¡Sigue así!`;
+        devIcon = 'check-circle';
+        devColor = 'var(--color-success)';
+      }
+      
+      cardDev.innerHTML = `
+        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+          <div style="background: ${devColor}15; color: ${devColor}; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="${devIcon}" style="width: 18px; height: 18px;"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; font-family: var(--font-headings); font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Desviación del Ciclo</h4>
+            <p style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">${devText}</p>
+          </div>
+        </div>
+      `;
+      auraContainer.appendChild(cardDev);
+
+      // Insight 3: Tip de Microahorros
+      const cardSavingsTip = document.createElement('div');
+      cardSavingsTip.className = 'aura-insight-item';
+      cardSavingsTip.style.background = 'var(--bg-card)';
+      cardSavingsTip.style.padding = '1rem';
+      cardSavingsTip.style.borderRadius = 'var(--radius-sm)';
+      cardSavingsTip.style.border = '1px solid var(--border-color)';
+      
+      cardSavingsTip.innerHTML = `
+        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+          <div style="background: #E0F2FE; color: #0284C7; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="piggy-bank" style="width: 18px; height: 18px;"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; font-family: var(--font-headings); font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Ahorro de Redondeo</h4>
+            <p style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">
+              <strong>Redondeo de Gastos</strong>: Si redondeas cada uno de tus gastos de este mes al siguiente dólar, habrías acumulado un total de <strong>${formatCurrency(potentialRoundupSavings)}</strong> de ahorro pasivo adicional.
+            </p>
+          </div>
+        </div>
+      `;
+      auraContainer.appendChild(cardSavingsTip);
+
+      lucide.createIcons();
+    }
 
     // Pintar Gráficos
     drawDashboardCharts();
@@ -2349,8 +2501,181 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    initSavingsMódulos();
     lucide.createIcons();
     applyPrivacyMode();
+  }
+
+  function initSavingsMódulos() {
+    // 1. Redondeo / Microahorros
+    let totalRoundup = 0;
+    let varExpensesCount = 0;
+    state.expenses.forEach(e => {
+      if (e.status === 'pagado' && e.expense_type === 'variable') {
+        const amt = Number(e.amount);
+        const nextDolar = Math.ceil(amt);
+        const diff = nextDolar - amt;
+        if (diff > 0) {
+          totalRoundup += diff;
+          varExpensesCount++;
+        }
+      }
+    });
+
+    const valEl = document.getElementById('micro-savings-val');
+    const countEl = document.getElementById('micro-savings-count');
+    if (valEl) valEl.textContent = formatCurrency(totalRoundup);
+    if (countEl) countEl.textContent = `${varExpensesCount} gastos variables analizados`;
+
+    const roundupGoalSelect = document.getElementById('roundup-target-goal');
+    if (roundupGoalSelect) {
+      roundupGoalSelect.innerHTML = '<option value="">Seleccione una meta...</option>';
+      state.savings.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.name} (Progreso: ${formatCurrency(s.saved_amount)} / ${formatCurrency(s.target_amount)})`;
+        roundupGoalSelect.appendChild(opt);
+      });
+    }
+
+    const formApply = document.getElementById('form-apply-roundup');
+    if (formApply) {
+      const newFormApply = formApply.cloneNode(true);
+      formApply.parentNode.replaceChild(newFormApply, formApply);
+      
+      newFormApply.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const goalId = parseInt(newFormApply.querySelector('#roundup-target-goal').value);
+        if (!goalId) {
+          alertError('Por favor seleccione una meta.');
+          return;
+        }
+        if (totalRoundup <= 0) {
+          alertError('No hay microahorros acumulados este mes para aplicar.');
+          return;
+        }
+        const targetGoal = state.savings.find(s => s.id === goalId);
+        if (targetGoal) {
+          const newSaved = Number(targetGoal.saved_amount) + totalRoundup;
+          const updatedData = {
+            name: targetGoal.name,
+            target_amount: targetGoal.target_amount,
+            saved_amount: newSaved,
+            target_date: targetGoal.target_date,
+            description: targetGoal.description,
+            priority: targetGoal.priority,
+            status: targetGoal.status
+          };
+          try {
+            await apiCall(`/api/savings/${targetGoal.id}`, 'PUT', updatedData);
+            alertSuccess(`¡Microahorros aplicados! Se depositaron ${formatCurrency(totalRoundup)} a la meta "${targetGoal.name}".`);
+            await loadMonthData();
+            renderSavings();
+          } catch (err) {
+            alertError(err.error || 'Error al aplicar ahorro.');
+          }
+        }
+      });
+    }
+
+    // 2. Calculadora de Interés Compuesto
+    const sliders = ['calc-initial-range', 'calc-monthly-range', 'calc-rate-range', 'calc-years-range'];
+    sliders.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        // Clonar para quitar listeners viejos
+        const newEl = el.cloneNode(true);
+        el.parentNode.replaceChild(newEl, el);
+        newEl.addEventListener('input', updateCompoundInterestChart);
+      }
+    });
+
+    updateCompoundInterestChart();
+  }
+
+  function updateCompoundInterestChart() {
+    const pEl = document.getElementById('calc-initial-range');
+    const pmtEl = document.getElementById('calc-monthly-range');
+    const rateEl = document.getElementById('calc-rate-range');
+    const yearsEl = document.getElementById('calc-years-range');
+
+    if (!pEl || !pmtEl || !rateEl || !yearsEl) return;
+
+    const P = parseFloat(pEl.value);
+    const PMT = parseFloat(pmtEl.value);
+    const annualRate = parseFloat(rateEl.value) / 100;
+    const years = parseInt(yearsEl.value);
+
+    document.getElementById('calc-initial-val').textContent = formatCurrency(P);
+    document.getElementById('calc-monthly-val').textContent = `${formatCurrency(PMT)} / mes`;
+    document.getElementById('calc-rate-val').textContent = `${rateEl.value}% anual`;
+    document.getElementById('calc-years-val').textContent = `${years} años`;
+
+    const labels = [];
+    const principalData = [];
+    const interestData = [];
+
+    const n = 12; // compounded monthly
+    const r_n = annualRate / n;
+
+    for (let y = 1; y <= years; y++) {
+      labels.push(`Año ${y}`);
+      const totalMonths = y * 12;
+      
+      const principalInvested = P + (PMT * totalMonths);
+      principalData.push(principalInvested);
+
+      let totalBalance = P * Math.pow(1 + r_n, totalMonths);
+      if (r_n > 0) {
+        totalBalance += PMT * ((Math.pow(1 + r_n, totalMonths) - 1) / r_n);
+      } else {
+        totalBalance += PMT * totalMonths;
+      }
+
+      const accumulatedInterest = Math.max(0, totalBalance - principalInvested);
+      interestData.push(accumulatedInterest);
+    }
+
+    const canvas = document.getElementById('chart-compound-interest');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    destroyChart('compound');
+
+    state.charts.compound = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Capital Invertido',
+            data: principalData,
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: '#6366F1',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Interés Acumulado',
+            data: interestData,
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            borderColor: '#10B981',
+            fill: true,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true }
+        }
+      }
+    });
   }
 
   document.getElementById('form-saving-goal').addEventListener('submit', async (e) => {
@@ -3100,14 +3425,178 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
+  function initCommandPalette() {
+    const dialog = document.getElementById('command-palette-dialog');
+    const input = document.getElementById('command-search-input');
+    const results = document.getElementById('command-palette-results');
+    const btnOpen = document.getElementById('btn-open-search');
+
+    if (!dialog || !input || !results) return;
+
+    function openPalette() {
+      dialog.classList.remove('hidden');
+      input.value = '';
+      renderResults('');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closePalette() {
+      dialog.classList.add('hidden');
+    }
+
+    if (btnOpen) {
+      // Remover listeners anteriores
+      const newBtn = btnOpen.cloneNode(true);
+      btnOpen.parentNode.replaceChild(newBtn, btnOpen);
+      newBtn.addEventListener('click', openPalette);
+    }
+
+    // Atajo de teclado global
+    const handleKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openPalette();
+      }
+      if (e.key === 'Escape') {
+        closePalette();
+      }
+    };
+    window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey);
+
+    // Cerrar al hacer clic fuera del card
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        closePalette();
+      }
+    });
+
+    input.addEventListener('input', (e) => {
+      renderResults(e.target.value.trim());
+    });
+
+    const navItems = [
+      { text: '📊 Ver Dashboard (Resumen General)', hash: '#dashboard' },
+      { text: '⚙️ Configurar Periodo Mensual', hash: '#config-mes' },
+      { text: '📈 Gestionar Ingresos', hash: '#ingresos' },
+      { text: '📉 Registrar Gastos del Mes', hash: '#gastos' },
+      { text: '💳 Administrar Cuentas y Tarjetas', hash: '#tarjetas' },
+      { text: '🏷️ Configurar Categorías de Gastos', hash: '#categorias' },
+      { text: '🔄 Planificar Gastos Recurrentes', hash: '#recurrentes' },
+      { text: '💸 Controlar Deudas y Préstamos', hash: '#deudas' },
+      { text: '🐷 Metas de Ahorro y Simulador', hash: '#metas' },
+      { text: '📅 Ver Calendario de Vencimientos', hash: '#calendario' },
+      { text: '📁 Cargar Comprobantes y PDF', hash: '#comprobantes' },
+      { text: '📊 Generar Reportes y Análisis PDF', hash: '#reportes' }
+    ];
+
+    function renderResults(query) {
+      results.innerHTML = '';
+      
+      // Comandos rápidos
+      if (query.startsWith('+') && query.length > 1) {
+        const val = parseFloat(query.substring(1));
+        if (!isNaN(val)) {
+          const div = document.createElement('div');
+          div.className = 'command-item';
+          div.style.padding = '0.6rem 0.8rem';
+          div.style.borderRadius = 'var(--radius-sm)';
+          div.style.cursor = 'pointer';
+          div.style.fontSize = '0.85rem';
+          div.style.color = 'var(--text-primary)';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.gap = '0.5rem';
+          div.innerHTML = `<strong>➕ Registrar Ingreso:</strong> Depositar $${val.toFixed(2)}`;
+          div.addEventListener('click', () => {
+            closePalette();
+            window.location.hash = '#ingresos';
+            setTimeout(() => {
+              const amountField = document.getElementById('inc-amount');
+              if (amountField) {
+                amountField.value = val;
+                amountField.focus();
+              }
+            }, 150);
+          });
+          results.appendChild(div);
+        }
+      }
+
+      if (query.startsWith('-') && query.length > 1) {
+        const val = parseFloat(query.substring(1));
+        if (!isNaN(val)) {
+          const div = document.createElement('div');
+          div.className = 'command-item';
+          div.style.padding = '0.6rem 0.8rem';
+          div.style.borderRadius = 'var(--radius-sm)';
+          div.style.cursor = 'pointer';
+          div.style.fontSize = '0.85rem';
+          div.style.color = 'var(--text-primary)';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.gap = '0.5rem';
+          div.innerHTML = `<strong>➖ Registrar Gasto:</strong> Retirar $${val.toFixed(2)}`;
+          div.addEventListener('click', () => {
+            closePalette();
+            window.location.hash = '#gastos';
+            setTimeout(() => {
+              const amountField = document.getElementById('exp-amount');
+              if (amountField) {
+                amountField.value = val;
+                amountField.focus();
+              }
+            }, 150);
+          });
+          results.appendChild(div);
+        }
+      }
+
+      const filtered = navItems.filter(item => 
+        item.text.toLowerCase().includes(query.toLowerCase())
+      );
+
+      if (filtered.length === 0 && results.children.length === 0) {
+        results.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem;">No se encontraron resultados.</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'command-item';
+        div.style.padding = '0.6rem 0.8rem';
+        div.style.borderRadius = 'var(--radius-sm)';
+        div.style.cursor = 'pointer';
+        div.style.fontSize = '0.85rem';
+        div.style.color = 'var(--text-primary)';
+        div.style.transition = 'background 0.15s ease';
+        div.textContent = item.text;
+        
+        div.addEventListener('mouseenter', () => {
+          div.style.background = 'rgba(99, 102, 241, 0.1)';
+        });
+        div.addEventListener('mouseleave', () => {
+          div.style.background = 'transparent';
+        });
+
+        div.addEventListener('click', () => {
+          closePalette();
+          window.location.hash = item.hash;
+        });
+        results.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+  }
+
   // ==========================================
   // INICIO AL CARGAR PAGINA
   // ==========================================
-  // Comprobar si hay sesión activa en el servidor al cargar
   apiCall('/api/auth/me')
     .then(res => {
       state.user = res.user;
       bootstrapApp().then(() => {
+        initCommandPalette();
         router();
       });
     })

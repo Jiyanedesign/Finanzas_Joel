@@ -109,6 +109,11 @@
         </div>
         
         <div class="header-right">
+          <!-- Botón de Búsqueda Rápida (Ctrl+K) -->
+          <button id="btn-open-search" class="btn-icon-premium" title="Buscador Universal (Ctrl+K)" aria-label="Buscador Universal">
+            <i data-lucide="search"></i>
+          </button>
+
           <!-- Botón de Modo Privacidad -->
           <button id="btn-privacy-mode" class="btn-icon-premium" title="Modo Privacidad (Ocultar Saldos)" aria-label="Modo Privacidad">
             <i data-lucide="eye" id="privacy-icon"></i>
@@ -203,6 +208,15 @@
               <h2 class="kpi-value amount-sensitive" id="kpi-available-balance">$0.00</h2>
               <div class="kpi-footer" id="kpi-balance-status">En presupuesto seguro</div>
             </div>
+            
+            <div class="kpi-card safe-to-spend" style="background: linear-gradient(135deg, var(--primary-light), var(--bg-card)); border-left: 4px solid #10B981;">
+              <div class="kpi-header">
+                <span>Dinero Libre (Safe-to-Spend)</span>
+                <i data-lucide="shield-check" class="icon-kpi" style="color: #10B981;"></i>
+              </div>
+              <h2 class="kpi-value amount-sensitive" id="kpi-safe-to-spend" style="color: #10B981;">$0.00</h2>
+              <div class="kpi-footer" id="kpi-safe-to-spend-status">Libre de deudas y ahorros</div>
+            </div>
           </div>
 
           <div class="secondary-kpi-grid">
@@ -229,6 +243,17 @@
             <div class="sec-kpi-card">
               <span class="sec-kpi-title">Promedio Diario</span>
               <span class="sec-kpi-val amount-sensitive" id="kpi-daily-average">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Asistente Aura - Insights Inteligentes -->
+          <div class="card-premium aura-assistant-card" style="margin-top: 1.5rem; border-left: 5px solid #6366F1;">
+            <div class="aura-assistant-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <i data-lucide="sparkles" style="color: #6366F1; width: 22px; height: 22px;"></i>
+              <h3 style="margin: 0; font-family: var(--font-headings); font-weight: 700; color: var(--text-primary);">Asistente Inteligente Aura</h3>
+            </div>
+            <div class="aura-insights-grid" id="aura-insights-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              <p class="text-muted">Analizando tus movimientos financieros...</p>
             </div>
           </div>
 
@@ -1072,6 +1097,72 @@
           <div class="goals-progress-grid" id="goals-list-container">
             <!-- Tarjetas de metas con barras de progreso circulares o lineales avanzadas -->
           </div>
+
+          <!-- MÓDULOS DE AHORRO AVANZADOS -->
+          <div class="charts-row" style="margin-top: 2rem;">
+            <!-- CARD 1: SIMULADOR DE MICROAHORROS -->
+            <div class="chart-card">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i data-lucide="coins" style="color: var(--color-warning);"></i>
+                <h3 style="margin: 0; font-family: var(--font-headings); font-weight: 700; color: var(--text-primary);">Simulador de Redondeo (Microahorros)</h3>
+              </div>
+              <p class="text-muted" style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 1.25rem;">
+                Analiza las compras variables de este mes y calcula el ahorro acumulado si hubieras redondeado cada transacción al siguiente dólar.
+              </p>
+              <div class="micro-savings-box" style="background: var(--bg-body); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.25rem; text-align: center;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Microahorros Acumulados</span>
+                <h2 id="micro-savings-val" style="font-size: 2.25rem; font-family: var(--font-headings); font-weight: 800; color: #F59E0B; margin: 0;">$0.00</h2>
+                <span id="micro-savings-count" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">0 gastos variables analizados</span>
+              </div>
+              
+              <form id="form-apply-roundup" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group" style="margin: 0;">
+                  <label for="roundup-target-goal" style="font-size: 0.75rem; color: var(--text-primary);">Depositar este Ahorro a la Meta:</label>
+                  <select id="roundup-target-goal" class="input-premium" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;" required>
+                    <option value="">Seleccione una meta...</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn-primary-premium full-width" style="padding: 0.5rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                  <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> Aplicar Ahorro en Cuenta
+                </button>
+              </form>
+            </div>
+
+            <!-- CARD 2: CALCULADORA DE INTERÉS COMPUESTO -->
+            <div class="chart-card">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i data-lucide="bar-chart-3" style="color: var(--primary-color);"></i>
+                <h3 style="margin: 0; font-family: var(--font-headings); font-weight: 700; color: var(--text-primary);">Calculadora de Interés Compuesto</h3>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Depósito Inicial ($)</label>
+                  <input type="range" id="calc-initial-range" min="0" max="50000" step="500" value="1000" style="width: 100%;">
+                  <span id="calc-initial-val" style="font-size: 0.75rem; font-weight: 600; display: block; margin-top: 0.25rem; color: var(--text-primary);">$1,000</span>
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Contribución Mensual ($)</label>
+                  <input type="range" id="calc-monthly-range" min="0" max="2000" step="25" value="100" style="width: 100%;">
+                  <span id="calc-monthly-val" style="font-size: 0.75rem; font-weight: 600; display: block; margin-top: 0.25rem; color: var(--text-primary);">$100 / mes</span>
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Tasa de Interés Anual (%)</label>
+                  <input type="range" id="calc-rate-range" min="1" max="25" step="0.5" value="8" style="width: 100%;">
+                  <span id="calc-rate-val" style="font-size: 0.75rem; font-weight: 600; display: block; margin-top: 0.25rem; color: var(--text-primary);">8% anual</span>
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Plazo en Años</label>
+                  <input type="range" id="calc-years-range" min="1" max="40" step="1" value="10" style="width: 100%;">
+                  <span id="calc-years-val" style="font-size: 0.75rem; font-weight: 600; display: block; margin-top: 0.25rem; color: var(--text-primary);">10 años</span>
+                </div>
+              </div>
+              
+              <div class="chart-wrapper" style="height: 140px;">
+                <canvas id="chart-compound-interest"></canvas>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- ==========================================
@@ -1500,6 +1591,20 @@
           <button type="button" id="btn-cancel-debt-pay" class="btn-secondary-premium">Cancelar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- PALETA DE COMANDOS FLOTANTE (BUSCADOR UNIVERSAL) -->
+  <div id="command-palette-dialog" class="dialog-overlay hidden" style="z-index: 10000; align-items: flex-start; padding-top: 10vh;">
+    <div class="dialog-card" style="width: 500px; max-width: 95%; padding: 1.25rem; border-radius: var(--radius-md); box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid var(--border-color); background: var(--bg-card); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+      <div style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+        <i data-lucide="search" style="color: var(--text-muted); width: 18px; height: 18px;"></i>
+        <input type="text" id="command-search-input" placeholder="Buscar secciones, comandos (+monto, -monto)..." style="flex: 1; border: none; background: transparent; font-size: 0.95rem; color: var(--text-primary); outline: none;" autofocus>
+        <span style="font-size: 0.7rem; color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.1rem 0.3rem; border-radius: var(--radius-sm);">ESC</span>
+      </div>
+      <div class="command-palette-results" id="command-palette-results" style="display: flex; flex-direction: column; gap: 0.25rem; max-height: 300px; overflow-y: auto;">
+        <!-- Insertados dinámicamente -->
+      </div>
     </div>
   </div>
 
