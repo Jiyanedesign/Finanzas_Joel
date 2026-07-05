@@ -282,9 +282,8 @@ try {
             }
         }
 
-        // Crear Mes Financiero semilla: Julio 2026
         $stmtMonth = $pdo->prepare("INSERT INTO monthly_configs (user_id, month, year, initial_budget, initial_balance, saving_goal, currency, notes, cycle_start_day, cycle_end_day) VALUES (?, 7, 2026, 1200.00, 1400.00, 200.00, '$', ?, 1, 31)");
-        $stmtMonth->execute(['Mes de planificación de prueba - Julio']);
+        $stmtMonth->execute([$userId, 'Mes de planificación de prueba - Julio']);
         $monthConfigId = $pdo->lastInsertId();
 
         // Obtener subcategorías asociadas
