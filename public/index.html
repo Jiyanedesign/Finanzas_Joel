@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraFinance - Gestor de Finanzas Personales Premium</title>
+  <meta name="description" content="Lleve el control total de sus finanzas mensuales: presupuestos, ingresos, gastos, tarjetas, metas y reportes avanzados. Acceso privado y seguro.">
+  
+  <!-- Google Fonts: Outfit (títulos) e Inter (cuerpo y números) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Lucide Icons (Iconos vectoriales modernos de trazo fino) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  
+  <!-- Chart.js para análisis gráfico premium -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="light-mode">
+
+  <!-- APLICACIÓN PRINCIPAL (ESTADO LOGUEADO) -->
+  <div id="app-container" class="hidden">
+    
+    <!-- BARRA LATERAL (ESCRITORIO) -->
+    <aside id="sidebar">
+      <div class="sidebar-brand">
+        <i data-lucide="wallet" class="brand-icon"></i>
+        <span>AuraFinance</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="#config-mes" class="nav-item" id="nav-config-mes">
+          <i data-lucide="calendar-cog"></i><span>Configuración Mes</span>
+        </a>
+        <a href="#ingresos" class="nav-item" id="nav-ingresos">
+          <i data-lucide="trending-up"></i><span>Ingresos</span>
+        </a>
+        <a href="#gastos" class="nav-item" id="nav-gastos">
+          <i data-lucide="trending-down"></i><span>Gastos</span>
+        </a>
+        <a href="#tarjetas" class="nav-item" id="nav-tarjetas">
+          <i data-lucide="credit-card"></i><span>Tarjetas y Cuentas</span>
+        </a>
+        <a href="#categorias" class="nav-item" id="nav-categorias">
+          <i data-lucide="tags"></i><span>Categorías</span>
+        </a>
+        <a href="#recurrentes" class="nav-item" id="nav-recurrentes">
+          <i data-lucide="refresh-cw"></i><span>Gastos Recurrentes</span>
+        </a>
+        <a href="#deudas" class="nav-item" id="nav-deudas">
+          <i data-lucide="hand-coins"></i><span>Deudas</span>
+        </a>
+        <a href="#metas" class="nav-item" id="nav-metas">
+          <i data-lucide="piggy-bank"></i><span>Metas y Ahorro</span>
+        </a>
+        <a href="#calendario" class="nav-item" id="nav-calendario">
+          <i data-lucide="calendar"></i><span>Calendario</span>
+        </a>
+        <a href="#comprobantes" class="nav-item" id="nav-comprobantes">
+          <i data-lucide="file-text"></i><span>Comprobantes</span>
+        </a>
+        <a href="#reportes" class="nav-item" id="nav-reportes">
+          <i data-lucide="bar-chart-3"></i><span>Reportes</span>
+        </a>
+        <a href="#actividad" class="nav-item" id="nav-actividad">
+          <i data-lucide="history"></i><span>Actividad</span>
+        </a>
+        <a href="#configuracion" class="nav-item" id="nav-configuracion">
+          <i data-lucide="settings"></i><span>Configuración</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-menu">
+          <div class="user-avatar" id="sidebar-avatar">U</div>
+          <div class="user-info">
+            <span class="user-name" id="sidebar-user-name">Usuario</span>
+            <span class="user-role">Administrador</span>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn-logout" title="Cerrar Sesión">
+          <i data-lucide="log-out"></i><span>Cerrar Sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+    <main id="main-content">
+      
+      <!-- CABECERA PRINCIPAL -->
+      <header id="main-header">
+        <div class="header-left">
+          <button id="btn-toggle-menu" class="mobile-only-btn" aria-label="Abrir Menú">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="month-selector-wrapper">
+            <label for="header-month-select"><i data-lucide="calendar" class="icon-small"></i> Mes Financiero:</label>
+            <select id="header-month-select" class="select-premium">
+              <!-- Cargado dinámicamente -->
+            </select>
+          </div>
+        </div>
+        
+        <div class="header-right">
+          <!-- Botón de Modo Privacidad -->
+          <button id="btn-privacy-mode" class="btn-icon-premium" title="Modo Privacidad (Ocultar Saldos)" aria-label="Modo Privacidad">
+            <i data-lucide="eye" id="privacy-icon"></i>
+          </button>
+          
+          <!-- Botón Modo Oscuro/Claro -->
+          <button id="btn-theme-toggle" class="btn-icon-premium" title="Alternar Modo Oscuro/Claro" aria-label="Cambiar Tema">
+            <i data-lucide="moon" id="theme-icon"></i>
+          </button>
+          
+          <!-- Campana de Alertas -->
+          <div class="notifications-wrapper">
+            <button id="btn-notifications" class="btn-icon-premium" title="Notificaciones Financieras" aria-label="Alertas">
+              <i data-lucide="bell"></i>
+              <span class="badge-dot hidden" id="notif-badge"></span>
+            </button>
+            <div class="notifications-dropdown hidden" id="notifications-dropdown">
+              <div class="dropdown-header">Notificaciones Financieras</div>
+              <div class="dropdown-content" id="notifications-list">
+                <!-- Cargado dinámicamente -->
+                <div class="empty-notif">No hay alertas activas en este momento.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- SECCIÓN VISTAS DINÁMICAS (SPA) -->
+      <div id="view-container">
+        
+        <!-- ==========================================
+             VISTA 1: DASHBOARD
+             ========================================== -->
+        <section id="view-dashboard" class="app-view">
+          <div class="view-header-title">
+            <h1>Panel de Control</h1>
+            <p>Resumen y salud financiera del mes actual.</p>
+          </div>
+          
+          <!-- Accesos Rápidos -->
+          <div class="quick-actions-bar">
+            <button id="quick-add-expense" class="btn-primary-premium"><i data-lucide="plus-circle"></i> Registrar Gasto</button>
+            <button id="quick-add-income" class="btn-success-premium"><i data-lucide="plus-circle"></i> Registrar Ingreso</button>
+            <button id="quick-upload-receipt" class="btn-secondary-premium"><i data-lucide="upload-cloud"></i> Subir Comprobante</button>
+            <button id="quick-view-cards" class="btn-secondary-premium"><i data-lucide="credit-card"></i> Cuentas/Tarjetas</button>
+          </div>
+
+          <!-- Alertas Inteligentes (Banner) -->
+          <div id="dashboard-alerts" class="alerts-container">
+            <!-- Insertadas dinámicamente -->
+          </div>
+
+          <!-- Cards de Resumen KPI -->
+          <div class="kpi-grid">
+            <div class="kpi-card budget">
+              <div class="kpi-header">
+                <span>Presupuesto Inicial</span>
+                <i data-lucide="compass" class="icon-kpi"></i>
+              </div>
+              <h2 class="kpi-value amount-sensitive" id="kpi-initial-budget">$0.00</h2>
+              <div class="kpi-footer">Configurado al inicio de ciclo</div>
+            </div>
+            
+            <div class="kpi-card income">
+              <div class="kpi-header">
+                <span>Ingresos Totales</span>
+                <i data-lucide="trending-up" class="icon-kpi"></i>
+              </div>
+              <h2 class="kpi-value amount-sensitive" id="kpi-total-incomes">$0.00</h2>
+              <div class="kpi-footer" id="kpi-income-pct">0% del presupuesto</div>
+            </div>
+            
+            <div class="kpi-card expense">
+              <div class="kpi-header">
+                <span>Gastos Totales</span>
+                <i data-lucide="trending-down" class="icon-kpi"></i>
+              </div>
+              <h2 class="kpi-value amount-sensitive" id="kpi-total-expenses">$0.00</h2>
+              <div class="kpi-footer-progress">
+                <div class="progress-bar-container">
+                  <div class="progress-bar" id="kpi-expense-progress" style="width: 0%"></div>
+                </div>
+                <span id="kpi-expense-pct">0% usado</span>
+              </div>
+            </div>
+            
+            <div class="kpi-card balance">
+              <div class="kpi-header">
+                <span>Balance Disponible</span>
+                <i data-lucide="activity" class="icon-kpi"></i>
+              </div>
+              <h2 class="kpi-value amount-sensitive" id="kpi-available-balance">$0.00</h2>
+              <div class="kpi-footer" id="kpi-balance-status">En presupuesto seguro</div>
+            </div>
+          </div>
+
+          <div class="secondary-kpi-grid">
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Ahorro del Mes</span>
+              <span class="sec-kpi-val amount-sensitive" id="kpi-month-saving">$0.00</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Gastos Pendientes</span>
+              <span class="sec-kpi-val amount-sensitive" id="kpi-pending-expenses">$0.00</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Pagos en Efectivo</span>
+              <span class="sec-kpi-val amount-sensitive" id="kpi-cash-payments">$0.00</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Tarjeta Más Usada</span>
+              <span class="sec-kpi-val" id="kpi-top-card">Ninguna</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Categoría Top Gasto</span>
+              <span class="sec-kpi-val" id="kpi-top-category">Ninguna</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Promedio Diario</span>
+              <span class="sec-kpi-val amount-sensitive" id="kpi-daily-average">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Gráficos del Dashboard -->
+          <div class="charts-row">
+            <div class="chart-card">
+              <h3>Ingresos vs Gastos Acumulados</h3>
+              <div class="chart-wrapper">
+                <canvas id="chart-income-expense"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>Gastos por Categoría</h3>
+              <div class="chart-wrapper">
+                <canvas id="chart-expenses-category"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <h3>Gastos Fijos vs Variables</h3>
+              <div class="chart-wrapper">
+                <canvas id="chart-fixed-variable"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>Evolución de Saldo Diario</h3>
+              <div class="chart-wrapper">
+                <canvas id="chart-daily-balance"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 2: CONFIGURACIÓN MES
+             ========================================== -->
+        <section id="view-config-mes" class="app-view">
+          <div class="view-header-title">
+            <h1>Configuración del Mes Financiero</h1>
+            <p>Configure los parámetros, presupuestos y límites del ciclo económico actual.</p>
+          </div>
+
+          <div class="card-premium">
+            <form id="form-config-mes">
+              <input type="hidden" id="month-config-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="config-month">Mes Financiero</label>
+                  <select id="config-month" class="input-premium" required>
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="config-year">Año</label>
+                  <input type="number" id="config-year" class="input-premium" min="2020" max="2100" required>
+                </div>
+                <div class="form-group">
+                  <label for="config-budget">Presupuesto Inicial</label>
+                  <input type="number" id="config-budget" class="input-premium" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                  <label for="config-balance">Saldo Inicial Disponible</label>
+                  <input type="number" id="config-balance" class="input-premium" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                  <label for="config-saving">Meta de Ahorro</label>
+                  <input type="number" id="config-saving" class="input-premium" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                  <label for="config-currency">Moneda</label>
+                  <input type="text" id="config-currency" class="input-premium" placeholder="e.g. $, €, S/." required>
+                </div>
+                <div class="form-group">
+                  <label for="config-cycle-start">Día de Inicio de Ciclo</label>
+                  <input type="number" id="config-cycle-start" class="input-premium" min="1" max="31" required>
+                </div>
+                <div class="form-group">
+                  <label for="config-cycle-end">Día de Cierre de Ciclo</label>
+                  <input type="number" id="config-cycle-end" class="input-premium" min="1" max="31" required>
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="config-notes">Notas del Mes</label>
+                <textarea id="config-notes" class="input-premium" rows="3"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" id="btn-save-month-config" class="btn-primary-premium">Guardar Configuración</button>
+                <button type="button" id="btn-close-month-action" class="btn-danger-premium">Cerrar Mes Financiero</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Historial de Meses creados -->
+          <div class="table-section-title">Meses Creados en el Historial</div>
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-months-config">
+              <thead>
+                <tr>
+                  <th>Periodo</th>
+                  <th>Presupuesto</th>
+                  <th>Saldo Inicial</th>
+                  <th>Meta Ahorro</th>
+                  <th>Moneda</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 3: INGRESOS
+             ========================================== -->
+        <section id="view-ingresos" class="app-view">
+          <div class="view-header-title">
+            <h1>Gestión de Ingresos</h1>
+            <p>Registre y administre todas las entradas de dinero.</p>
+          </div>
+
+          <!-- Formulario de ingreso (ocultable / colapsable tipo modal/tarjeta) -->
+          <div class="card-premium" id="card-form-income">
+            <h3 id="income-form-title">Registrar Nuevo Ingreso</h3>
+            <form id="form-income">
+              <input type="hidden" id="income-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="inc-date">Fecha</label>
+                  <input type="date" id="inc-date" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="inc-amount">Monto</label>
+                  <input type="number" id="inc-amount" class="input-premium" step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label for="inc-source">Fuente de Ingreso</label>
+                  <input type="text" id="inc-source" class="input-premium" list="suggested-sources" placeholder="e.g. Sueldo, Freelance" required>
+                  <datalist id="suggested-sources">
+                    <option value="Sueldo">
+                    <option value="Trabajo Freelance">
+                    <option value="Cliente">
+                    <option value="Venta">
+                    <option value="Reembolso">
+                    <option value="Préstamo recibido">
+                    <option value="Regalo">
+                  </datalist>
+                </div>
+                <div class="form-group">
+                  <label for="inc-category">Categoría Asociada</label>
+                  <select id="inc-category" class="input-premium">
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inc-method">Método de Recepción</label>
+                  <select id="inc-method" class="input-premium" required>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Billetera Digital">Billetera Digital</option>
+                    <option value="Depósito">Depósito</option>
+                    <option value="PayPal">PayPal</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inc-account">Cuenta Destino</label>
+                  <select id="inc-account" class="input-premium">
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inc-status">Estado</label>
+                  <select id="inc-status" class="input-premium">
+                    <option value="recibido">Recibido</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inc-tag">Etiqueta</label>
+                  <input type="text" id="inc-tag" class="input-premium" placeholder="e.g. Extra, Fijo">
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="inc-desc">Descripción</label>
+                <input type="text" id="inc-desc" class="input-premium" placeholder="Detalle adicional del ingreso">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Ingreso</button>
+                <button type="button" id="btn-cancel-income" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Filtros y Tabla de Ingresos -->
+          <div class="table-controls">
+            <input type="text" id="search-incomes" class="input-search" placeholder="Buscar ingresos...">
+            <div class="filter-group">
+              <select id="filter-inc-status" class="select-premium">
+                <option value="">Todos los Estados</option>
+                <option value="recibido">Recibido</option>
+                <option value="pendiente">Pendiente</option>
+              </select>
+              <button id="btn-export-inc-csv" class="btn-secondary-premium"><i data-lucide="download"></i> Exportar CSV</button>
+            </div>
+          </div>
+
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-incomes">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Fuente</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Método</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 4: GASTOS (EXTREMADAMENTE COMPLETO)
+             ========================================== -->
+        <section id="view-gastos" class="app-view">
+          <div class="view-header-title">
+            <h1>Registro y Control de Gastos</h1>
+            <p>Monitoreo detallado de todas sus salidas de efectivo, tarjetas y deudas.</p>
+          </div>
+
+          <div class="card-premium" id="card-form-expense">
+            <h3 id="expense-form-title">Registrar Nuevo Gasto</h3>
+            <form id="form-expense">
+              <input type="hidden" id="expense-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="exp-date">Fecha del Gasto</label>
+                  <input type="date" id="exp-date" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="exp-time">Hora del Gasto</label>
+                  <input type="time" id="exp-time" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="exp-amount">Monto ($)</label>
+                  <input type="number" id="exp-amount" class="input-premium" step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label for="exp-title">Nombre / Título del Gasto</label>
+                  <input type="text" id="exp-title" class="input-premium" placeholder="e.g. Almuerzo de negocios" required>
+                </div>
+                <div class="form-group">
+                  <label for="exp-category">Categoría</label>
+                  <select id="exp-category" class="input-premium" required>
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-subcategory">Subcategoría</label>
+                  <select id="exp-subcategory" class="input-premium">
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-method">Método de Pago</label>
+                  <select id="exp-method" class="input-premium" required>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta_debito">Tarjeta de Débito</option>
+                    <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                    <option value="transferencia_bancaria">Transferencia Bancaria</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="billetera_digital">Billetera Digital</option>
+                    <option value="deposito">Depósito</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-account">Tarjeta o Cuenta Usada</label>
+                  <select id="exp-account" class="input-premium">
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-type">Tipo de Gasto</label>
+                  <select id="exp-type" class="input-premium">
+                    <option value="variable">Variable</option>
+                    <option value="fijo">Fijo</option>
+                    <option value="necesario">Necesario</option>
+                    <option value="innecesario">Innecesario</option>
+                    <option value="recurrente">Recurrente</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-status">Estado del Gasto</label>
+                  <select id="exp-status" class="input-premium">
+                    <option value="pagado">Pagado</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="parcial">Parcial</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exp-merchant">Lugar o Comercio</label>
+                  <input type="text" id="exp-merchant" class="input-premium" placeholder="e.g. Supermaxi, Uber">
+                </div>
+                <div class="form-group">
+                  <label for="exp-tag">Etiqueta Personalizada</label>
+                  <input type="text" id="exp-tag" class="input-premium" placeholder="e.g. Viaje, deducible, urgente">
+                </div>
+              </div>
+
+              <!-- Atributos booleanos rápidos -->
+              <div class="form-checkbox-row">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="exp-is-deducible"> Gasto Deducible de Impuestos
+                </label>
+                <label class="checkbox-container">
+                  <input type="checkbox" id="exp-is-necessary" checked> Gasto Absolutamente Necesario
+                </label>
+                <label class="checkbox-container">
+                  <input type="checkbox" id="exp-is-planned" checked> Gasto Planificado (No Impulsivo)
+                </label>
+              </div>
+
+              <!-- Sección para gasto compartido / dividido -->
+              <div class="expandable-section">
+                <button type="button" class="btn-expand" id="btn-toggle-split"><i data-lucide="users"></i> Opciones de Gasto Dividido o en Cuotas</button>
+                <div class="expandable-content hidden" id="split-options-container">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="exp-split-type">Tipo de División</label>
+                      <select id="exp-split-type" class="input-premium">
+                        <option value="simple">Simple (100% propio)</option>
+                        <option value="compartido">Compartido con otra persona</option>
+                        <option value="cuotas">Diferido en Cuotas mensuales</option>
+                      </select>
+                    </div>
+                    <div class="form-group" id="group-split-person">
+                      <label for="exp-split-person">Persona Relacionada</label>
+                      <input type="text" id="exp-split-person" class="input-premium" placeholder="e.g. Socio, Amigo, Pareja">
+                    </div>
+                    <div class="form-group" id="group-split-share">
+                      <label for="exp-split-share">Monto a cargo del otro ($)</label>
+                      <input type="number" id="exp-split-share" class="input-premium" step="0.01" placeholder="0.00">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="exp-notes">Notas / Descripción Detallada</label>
+                <textarea id="exp-notes" class="input-premium" rows="2" placeholder="Notas sobre el gasto..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Gasto</button>
+                <button type="button" id="btn-cancel-expense" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Filtros avanzados y Buscador Global -->
+          <div class="filters-panel-premium">
+            <div class="filters-header">
+              <h3>Filtros Avanzados</h3>
+              <button id="btn-reset-filters" class="btn-text-premium">Limpiar Filtros</button>
+            </div>
+            <div class="filters-grid">
+              <input type="text" id="filter-exp-search" class="input-premium" placeholder="Buscar por palabra clave...">
+              
+              <select id="filter-exp-category" class="select-premium">
+                <option value="">Todas las Categorías</option>
+                <!-- Cargado dinámicamente -->
+              </select>
+
+              <select id="filter-exp-method" class="select-premium">
+                <option value="">Todos los Métodos de Pago</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta_debito">Tarjeta de Débito</option>
+                <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                <option value="transferencia_bancaria">Transferencia</option>
+              </select>
+
+              <select id="filter-exp-type" class="select-premium">
+                <option value="">Todos los Tipos</option>
+                <option value="fijo">Fijos</option>
+                <option value="variable">Variables</option>
+                <option value="necesario">Necesarios</option>
+                <option value="innecesario">Innecesarios</option>
+              </select>
+
+              <select id="filter-exp-receipt" class="select-premium">
+                <option value="">Comprobante (Cualquiera)</option>
+                <option value="con">Con Comprobante</option>
+                <option value="sin">Sin Comprobante</option>
+              </select>
+              
+              <div class="date-range-filter">
+                <input type="date" id="filter-exp-start-date" class="input-premium" title="Fecha inicio">
+                <span>a</span>
+                <input type="date" id="filter-exp-end-date" class="input-premium" title="Fecha fin">
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Gastos -->
+          <div class="table-actions-header">
+            <span id="expenses-count-badge" class="count-badge">0 transacciones encontradas</span>
+            <button id="btn-export-exp-csv" class="btn-secondary-premium"><i data-lucide="download"></i> Exportar a CSV</button>
+          </div>
+
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-expenses">
+              <thead>
+                <tr>
+                  <th>Fecha/Hora</th>
+                  <th>Gasto / Comercio</th>
+                  <th>Categoría</th>
+                  <th>Método/Tarjeta</th>
+                  <th>Monto</th>
+                  <th>Comprobante</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 5: TARJETAS Y CUENTAS
+             ========================================== -->
+        <section id="view-tarjetas" class="app-view">
+          <div class="view-header-title">
+            <h1>Tarjetas, Cuentas y Métodos de Pago</h1>
+            <p>Controle los saldos disponibles y límites de crédito asignados por cada entidad.</p>
+          </div>
+
+          <div class="card-premium" id="card-form-account">
+            <h3>Registrar Cuenta o Tarjeta</h3>
+            <form id="form-account">
+              <input type="hidden" id="account-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="acc-name">Nombre de Cuenta / Tarjeta</label>
+                  <input type="text" id="acc-name" class="input-premium" placeholder="e.g. Visa Platinum, Efectivo Joel" required>
+                </div>
+                <div class="form-group">
+                  <label for="acc-bank">Banco / Entidad</label>
+                  <input type="text" id="acc-bank" class="input-premium" placeholder="e.g. Banco Pichincha, Cooperativa">
+                </div>
+                <div class="form-group">
+                  <label for="acc-type">Tipo de Cuenta</label>
+                  <select id="acc-type" class="input-premium" required>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="debito">Débito</option>
+                    <option value="credito">Crédito / Tarjeta de Crédito</option>
+                    <option value="cuenta_bancaria">Cuenta Bancaria (Ahorros/Corriente)</option>
+                    <option value="billetera_digital">Billetera Digital (Deuna, Yape, PayPal)</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="acc-last-four">Últimos 4 Dígitos</label>
+                  <input type="text" id="acc-last-four" class="input-premium" maxlength="4" placeholder="e.g. 5678">
+                </div>
+                <div class="form-group">
+                  <label for="acc-balance">Saldo Inicial Disponible</label>
+                  <input type="number" id="acc-balance" class="input-premium" step="0.01" value="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="acc-limit">Límite de Crédito (si aplica)</label>
+                  <input type="number" id="acc-limit" class="input-premium" step="0.01" value="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="acc-cut-day">Día de Corte (1 al 31)</label>
+                  <input type="number" id="acc-cut-day" class="input-premium" min="1" max="31">
+                </div>
+                <div class="form-group">
+                  <label for="acc-due-day">Día de Pago (1 al 31)</label>
+                  <input type="number" id="acc-due-day" class="input-premium" min="1" max="31">
+                </div>
+                <div class="form-group">
+                  <label for="acc-color">Color Identificador</label>
+                  <input type="color" id="acc-color" class="input-premium" value="#4F46E5">
+                </div>
+                <div class="form-group">
+                  <label for="acc-status">Estado</label>
+                  <select id="acc-status" class="input-premium">
+                    <option value="activa">Activa</option>
+                    <option value="inactiva">Inactiva</option>
+                    <option value="archivada">Archivada</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="acc-notes">Notas / Descripción</label>
+                <input type="text" id="acc-notes" class="input-premium" placeholder="Notas sobre esta cuenta">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Cuenta</button>
+                <button type="button" id="btn-cancel-account" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Listado Visual de Tarjetas/Cuentas -->
+          <div class="accounts-visual-list" id="accounts-cards-container">
+            <!-- Cargado dinámicamente como tarjetas de banco premium -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 6: CATEGORÍAS
+             ========================================== -->
+        <section id="view-categorias" class="app-view">
+          <div class="view-header-title">
+            <h1>Categorías y Presupuestos Asignados</h1>
+            <p>Cree y edite límites de gastos por categoría para evitar excederse en el mes.</p>
+          </div>
+
+          <div class="card-premium">
+            <h3>Registrar / Editar Categoría</h3>
+            <form id="form-category">
+              <input type="hidden" id="category-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="cat-name">Nombre de Categoría</label>
+                  <input type="text" id="cat-name" class="input-premium" placeholder="e.g. Alimentación, Vivienda" required>
+                </div>
+                <div class="form-group">
+                  <label for="cat-budget">Presupuesto Mensual Asignado ($)</label>
+                  <input type="number" id="cat-budget" class="input-premium" step="0.01" value="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="cat-icon">Icono (Nombre de Lucide)</label>
+                  <select id="cat-icon" class="input-premium">
+                    <option value="utensils">Cubiertos (Comida)</option>
+                    <option value="car">Automóvil (Transporte)</option>
+                    <option value="home">Casa (Vivienda)</option>
+                    <option value="film">Cine (Entretenimiento)</option>
+                    <option value="heart">Corazón (Salud)</option>
+                    <option value="book">Libro (Educación)</option>
+                    <option value="piggy-bank">Alcancía (Ahorro)</option>
+                    <option value="shopping-bag">Bolsa (Ropa/Compras)</option>
+                    <option value="wifi">Wifi (Servicios)</option>
+                    <option value="shield-alert">Alerta (Emergencias)</option>
+                    <option value="tag">Etiqueta (Otro)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="cat-color">Color Visual</label>
+                  <input type="color" id="cat-color" class="input-premium" value="#10B981">
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="cat-subs">Subcategorías (Separadas por comas)</label>
+                <input type="text" id="cat-subs" class="input-premium" placeholder="e.g. Supermercado, Restaurantes, Cafeterías">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Categoría</button>
+                <button type="button" id="btn-cancel-category" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Listado de Categorías con barras de progreso de su presupuesto -->
+          <div class="categories-progress-list" id="categories-list-container">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 7: GASTOS RECURRENTES
+             ========================================== -->
+        <section id="view-recurrentes" class="app-view">
+          <div class="view-header-title">
+            <h1>Planificador de Gastos Recurrentes</h1>
+            <p>Programe facturas fijas como alquiler, suscripciones (Netflix, Spotify) o cuotas que se debitan automáticamente.</p>
+          </div>
+
+          <div class="card-premium">
+            <h3>Programar Gasto Recurrente</h3>
+            <form id="form-recurring">
+              <input type="hidden" id="recurring-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="rec-name">Nombre del Servicio/Gasto</label>
+                  <input type="text" id="rec-name" class="input-premium" placeholder="e.g. Alquiler, Netflix" required>
+                </div>
+                <div class="form-group">
+                  <label for="rec-amount">Monto Fijo ($)</label>
+                  <input type="number" id="rec-amount" class="input-premium" step="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="rec-category">Categoría</label>
+                  <select id="rec-category" class="input-premium" required>
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="rec-method">Método de Pago Sugerido</label>
+                  <select id="rec-method" class="input-premium" required>
+                    <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                    <option value="tarjeta_debito">Tarjeta de Débito</option>
+                    <option value="transferencia_bancaria">Transferencia</option>
+                    <option value="efectivo">Efectivo</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="rec-account">Tarjeta/Cuenta de Cargo</label>
+                  <select id="rec-account" class="input-premium">
+                    <!-- Cargado dinámicamente -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="rec-frequency">Frecuencia de Cobro</label>
+                  <select id="rec-frequency" class="input-premium" required>
+                    <option value="mensual">Mensual</option>
+                    <option value="quincenal">Quincenal</option>
+                    <option value="semanal">Semanal</option>
+                    <option value="anual">Anual</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="rec-date">Fecha de Próximo Cobro</label>
+                  <input type="date" id="rec-date" class="input-premium" required>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Programar Gasto</button>
+                <button type="button" id="btn-cancel-recurring" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-section-title">Listado de Programación Recurrente</div>
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-recurring">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Monto</th>
+                  <th>Categoría</th>
+                  <th>Método / Cuenta</th>
+                  <th>Frecuencia</th>
+                  <th>Próximo Cobro</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 8: DEUDAS Y PAGOS
+             ========================================== -->
+        <section id="view-deudas" class="app-view">
+          <div class="view-header-title">
+            <h1>Control de Deudas y Créditos</h1>
+            <p>Registre préstamos personales o bancarios y abone pagos parciales registrándolos en sus cuentas.</p>
+          </div>
+
+          <div class="depts-summary-row">
+            <div class="summary-box">
+              <span class="label">Total Deudas Acumuladas</span>
+              <h3 class="amount-sensitive" id="debt-summary-total">$0.00</h3>
+            </div>
+            <div class="summary-box">
+              <span class="label">Total Pagado a la Fecha</span>
+              <h3 class="amount-sensitive text-success" id="debt-summary-paid">$0.00</h3>
+            </div>
+            <div class="summary-box">
+              <span class="label">Saldo Neto Pendiente</span>
+              <h3 class="amount-sensitive text-danger" id="debt-summary-pending">$0.00</h3>
+            </div>
+          </div>
+
+          <div class="card-premium">
+            <h3>Registrar Deuda / Crédito Recibido</h3>
+            <form id="form-debt">
+              <input type="hidden" id="debt-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="debt-name">Nombre de la Deuda</label>
+                  <input type="text" id="debt-name" class="input-premium" placeholder="e.g. Préstamo Auto, Tarjeta Deuda" required>
+                </div>
+                <div class="form-group">
+                  <label for="debt-lender">Acreedor (Persona/Banco)</label>
+                  <input type="text" id="debt-lender" class="input-premium" placeholder="e.g. Banco Pichincha, Tío Juan" required>
+                </div>
+                <div class="form-group">
+                  <label for="debt-total">Monto Total Adeudado ($)</label>
+                  <input type="number" id="debt-total" class="input-premium" step="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="debt-paid">Monto Ya Pagado ($)</label>
+                  <input type="number" id="debt-paid" class="input-premium" step="0.01" value="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="debt-start-date">Fecha de Inicio</label>
+                  <input type="date" id="debt-start-date" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="debt-due-date">Fecha Límite / Vencimiento</label>
+                  <input type="date" id="debt-due-date" class="input-premium">
+                </div>
+                <div class="form-group">
+                  <label for="debt-installments-total">Cuotas Totales</label>
+                  <input type="number" id="debt-installments-total" class="input-premium" min="1" value="1">
+                </div>
+                <div class="form-group">
+                  <label for="debt-installments-paid">Cuotas Pagadas</label>
+                  <input type="number" id="debt-installments-paid" class="input-premium" min="0" value="0">
+                </div>
+                <div class="form-group">
+                  <label for="debt-installment-val">Valor de Cuota ($)</label>
+                  <input type="number" id="debt-installment-val" class="input-premium" step="0.01" placeholder="e.g. 150.00">
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Deuda</button>
+                <button type="button" id="btn-cancel-debt" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-section-title">Listado de Deudas Activas</div>
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-debts">
+              <thead>
+                <tr>
+                  <th>Descripción (Acreedor)</th>
+                  <th>Monto Total</th>
+                  <th>Monto Pagado</th>
+                  <th>Saldo Pendiente</th>
+                  <th>Progreso</th>
+                  <th>Vencimiento</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 9: METAS Y AHORRO
+             ========================================== -->
+        <section id="view-metas" class="app-view">
+          <div class="view-header-title">
+            <h1>Metas de Ahorro e Inversión</h1>
+            <p>Establezca metas financieras a mediano/largo plazo y realice aportes directos.</p>
+          </div>
+
+          <div class="card-premium">
+            <h3>Registrar Nueva Meta Financiera</h3>
+            <form id="form-saving-goal">
+              <input type="hidden" id="saving-goal-id-field">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="goal-name">Nombre de la Meta</label>
+                  <input type="text" id="goal-name" class="input-premium" placeholder="e.g. Fondo Emergencia, Viaje Navidad" required>
+                </div>
+                <div class="form-group">
+                  <label for="goal-target">Monto Objetivo ($)</label>
+                  <input type="number" id="goal-target" class="input-premium" step="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="goal-saved">Monto Ahorrado Actual ($)</label>
+                  <input type="number" id="goal-saved" class="input-premium" step="0.01" value="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="goal-date">Fecha Objetivo</label>
+                  <input type="date" id="goal-date" class="input-premium">
+                </div>
+                <div class="form-group">
+                  <label for="goal-priority">Prioridad</label>
+                  <select id="goal-priority" class="input-premium">
+                    <option value="baja">Baja</option>
+                    <option value="media" selected>Media</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="goal-desc">Descripción / Propósito</label>
+                <input type="text" id="goal-desc" class="input-premium" placeholder="Detalles de la meta de ahorro">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-premium">Guardar Meta</button>
+                <button type="button" id="btn-cancel-goal" class="btn-secondary-premium">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-section-title">Progreso de sus Metas Financieras</div>
+          <div class="goals-progress-grid" id="goals-list-container">
+            <!-- Tarjetas de metas con barras de progreso circulares o lineales avanzadas -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 10: CALENDARIO FINANCIERO
+             ========================================== -->
+        <section id="view-calendario" class="app-view">
+          <div class="view-header-title">
+            <h1>Calendario Financiero</h1>
+            <p>Visualice en un calendario interactivo sus ingresos, gastos y próximos vencimientos de tarjetas por día.</p>
+          </div>
+
+          <div class="calendar-layout-wrapper">
+            <div class="card-premium calendar-container-box">
+              <div class="calendar-controls">
+                <button id="btn-cal-prev" class="btn-secondary-premium"><i data-lucide="chevron-left"></i> Anterior</button>
+                <h2 id="calendar-month-year-label">Julio 2026</h2>
+                <button id="btn-cal-next" class="btn-secondary-premium">Siguiente <i data-lucide="chevron-right"></i></button>
+              </div>
+              <div class="calendar-grid" id="calendar-grid-body">
+                <!-- Generado dinámicamente -->
+              </div>
+            </div>
+            
+            <div class="card-premium calendar-day-details-box" id="calendar-day-details">
+              <h3>Detalles del Día Seleccionado</h3>
+              <div class="selected-day-label" id="cal-selected-day-text">Seleccione un día para ver movimientos.</div>
+              <div class="day-movements-list" id="cal-day-movements-list">
+                <!-- Detalle cargado al hacer clic -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 11: COMPROBANTES
+             ========================================== -->
+        <section id="view-comprobantes" class="app-view">
+          <div class="view-header-title">
+            <h1>Gestor de Comprobantes (Recibos / Facturas)</h1>
+            <p>Todos los comprobantes adjuntos a sus gastos e ingresos mensuales en un solo lugar.</p>
+          </div>
+
+          <div class="table-controls">
+            <div class="filter-group">
+              <select id="filter-receipt-type" class="select-premium">
+                <option value="">Todos los Comprobantes</option>
+                <option value="expense">Solo de Gastos</option>
+                <option value="income">Solo de Ingresos</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="receipts-gallery" id="receipts-gallery-container">
+            <!-- Galería de comprobantes con opciones para Ver, Descargar y Eliminar -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 12: REPORTES Y EXPORTACIÓN
+             ========================================== -->
+        <section id="view-reportes" class="app-view">
+          <div class="view-header-title">
+            <h1>Reportes Financieros y Cierre de Periodo</h1>
+            <p>Obtenga resúmenes completos del mes y compare su rendimiento con meses anteriores.</p>
+          </div>
+
+          <div class="report-actions-row">
+            <button id="btn-print-report" class="btn-primary-premium"><i data-lucide="printer"></i> Imprimir Reporte / Guardar PDF</button>
+            <button id="btn-export-backup" class="btn-secondary-premium"><i data-lucide="download"></i> Exportar Respaldo Completo (JSON)</button>
+          </div>
+
+          <div class="card-premium printable-report-area" id="report-print-area">
+            <div class="report-print-header">
+              <h2>Informe Financiero del Mes</h2>
+              <span id="report-period-label">Julio 2026</span>
+            </div>
+            
+            <div class="report-block">
+              <h3>1. Resumen de Flujo de Caja</h3>
+              <table class="report-table">
+                <tr><td>Saldo Inicial Configurado:</td><td class="amount-sensitive" id="rep-initial-balance">$0.00</td></tr>
+                <tr><td>Ingresos Totales Recibidos:</td><td class="amount-sensitive text-success" id="rep-total-incomes">+$0.00</td></tr>
+                <tr><td>Gastos Totales Pagados:</td><td class="amount-sensitive text-danger" id="rep-total-expenses">-$0.00</td></tr>
+                <tr class="highlight-row"><td>Balance Neto Disponible:</td><td class="amount-sensitive" id="rep-net-balance">$0.00</td></tr>
+              </table>
+            </div>
+
+            <div class="report-block">
+              <h3>2. Distribución de Gastos por Categoría</h3>
+              <div id="report-categories-distribution">
+                <!-- Detalle por categorías -->
+              </div>
+            </div>
+
+            <div class="report-block">
+              <h3>3. Tarjetas y Cuentas Utilizadas</h3>
+              <div id="report-accounts-usage">
+                <!-- Detalle por cuentas -->
+              </div>
+            </div>
+
+            <div class="report-block">
+              <h3>4. Alertas y Análisis Financiero</h3>
+              <div class="report-analysis-text" id="report-recommendations">
+                Cargando recomendaciones personalizadas para optimizar su ahorro...
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparador entre Meses -->
+          <div class="table-section-title">Comparador de Meses Financieros</div>
+          <div class="card-premium">
+            <div class="compare-selector-row">
+              <div class="form-group">
+                <label for="compare-month-1">Mes Principal</label>
+                <select id="compare-month-1" class="select-premium"></select>
+              </div>
+              <span>vs</span>
+              <div class="form-group">
+                <label for="compare-month-2">Mes de Contraste</label>
+                <select id="compare-month-2" class="select-premium"></select>
+              </div>
+              <button id="btn-compare-action" class="btn-primary-premium" style="align-self: flex-end;">Comparar</button>
+            </div>
+
+            <div class="comparison-results-grid hidden" id="comparison-results">
+              <!-- Resultados de la comparación -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 13: ACTIVIDAD (HISTORIAL/AUDITORÍA)
+             ========================================== -->
+        <section id="view-actividad" class="app-view">
+          <div class="view-header-title">
+            <h1>Bitácora de Actividad</h1>
+            <p>Historial completo de auditoría y operaciones financieras realizadas en la cuenta.</p>
+          </div>
+
+          <div class="card-premium table-responsive">
+            <table class="table-premium" id="table-audit-logs">
+              <thead>
+                <tr>
+                  <th>Fecha/Hora</th>
+                  <th>Operación</th>
+                  <th>Descripción del Suceso</th>
+                  <th>IP de Origen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 14: CONFIGURACIÓN GENERAL
+             ========================================== -->
+        <section id="view-configuracion" class="app-view">
+          <div class="view-header-title">
+            <h1>Ajustes de la Cuenta y Perfil</h1>
+            <p>Configure su información de perfil, PIN de seguridad y opciones de importación.</p>
+          </div>
+
+          <div class="config-settings-grid">
+            
+            <!-- Ajustes de Perfil -->
+            <div class="card-premium">
+              <h3>Datos Personales</h3>
+              <form id="form-profile-settings">
+                <div class="form-group">
+                  <label for="profile-name">Nombre Completo</label>
+                  <input type="text" id="profile-name" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="profile-email">Correo Electrónico</label>
+                  <input type="email" id="profile-email" class="input-premium" disabled>
+                </div>
+                <button type="submit" class="btn-primary-premium">Actualizar Nombre</button>
+              </form>
+            </div>
+
+            <!-- Seguridad: PIN y Password -->
+            <div class="card-premium">
+              <h3>Seguridad Financiera</h3>
+              
+              <!-- Cambiar Contraseña -->
+              <form id="form-change-password">
+                <div class="form-group">
+                  <label for="change-pass-curr">Contraseña Actual</label>
+                  <input type="password" id="change-pass-curr" class="input-premium" required>
+                </div>
+                <div class="form-group">
+                  <label for="change-pass-new">Nueva Contraseña (mín. 8 caracteres)</label>
+                  <input type="password" id="change-pass-new" class="input-premium" required>
+                </div>
+                <button type="submit" class="btn-primary-premium">Cambiar Contraseña</button>
+              </form>
+              
+              <hr class="divider">
+              
+              <!-- PIN de Acceso a datos sensibles -->
+              <form id="form-pin-settings">
+                <div class="form-group">
+                  <label for="settings-security-pin">PIN de Seguridad Interno (4 dígitos)</label>
+                  <input type="password" id="settings-security-pin" class="input-premium" maxlength="4" placeholder="Dejar vacío para desactivar">
+                </div>
+                <button type="submit" class="btn-primary-premium">Guardar Configuración de PIN</button>
+              </form>
+            </div>
+
+            <!-- Importación de transacciones CSV -->
+            <div class="card-premium">
+              <h3>Importar Transacciones (CSV)</h3>
+              <p class="text-muted">Suba un archivo CSV para importar gastos e ingresos masivamente al mes financiero activo.</p>
+              <div class="csv-format-info">
+                <strong>Formato de archivo esperado:</strong><br>
+                <code>tipo, fecha, monto, titulo, categoria, metodo, notas</code><br>
+                <em>Ejemplo: expense, 2026-07-02, 15.50, Almuerzo, Alimentación, efectivo, comida rápida</em>
+              </div>
+              <form id="form-import-csv">
+                <div class="form-group">
+                  <label for="import-csv-file">Seleccionar archivo CSV</label>
+                  <input type="file" id="import-csv-file" class="input-premium" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn-success-premium">Iniciar Importación</button>
+              </form>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- APLICACIÓN DE AUTENTICACIÓN (LOGIN, REGISTRO, RECOVERY) -->
+  <div id="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <i data-lucide="wallet" class="brand-icon"></i>
+        <span>AuraFinance</span>
+      </div>
+
+      <!-- PANTALLA: INICIAR SESIÓN -->
+      <div id="auth-view-login">
+        <h2>Bienvenido de nuevo</h2>
+        <p>Ingrese sus credenciales privadas para continuar</p>
+        <div class="error-banner hidden" id="login-error-msg"></div>
+        
+        <form id="form-login">
+          <div class="form-group">
+            <label for="login-email">Correo Electrónico</label>
+            <input type="email" id="login-email" class="input-premium" placeholder="nombre@ejemplo.com" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="login-password">Contraseña</label>
+            <div class="password-wrapper">
+              <input type="password" id="login-password" class="input-premium" required>
+              <button type="button" class="btn-toggle-password" id="btn-login-toggle-pass">
+                <i data-lucide="eye" class="icon-toggle-pass"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn-primary-premium full-width">Iniciar Sesión</button>
+        </form>
+        
+        <div class="auth-footer-links">
+          <a href="#register" id="link-to-register">Crear una cuenta nueva</a>
+          <a href="#recover" id="link-to-recover">¿Olvidó su contraseña?</a>
+        </div>
+      </div>
+
+      <!-- PANTALLA: REGISTRO -->
+      <div id="auth-view-register" class="hidden">
+        <h2>Crear una Cuenta</h2>
+        <p>Comience a controlar sus finanzas personales hoy mismo</p>
+        <div class="error-banner hidden" id="register-error-msg"></div>
+        <div class="success-banner hidden" id="register-success-msg"></div>
+
+        <form id="form-register">
+          <div class="form-group">
+            <label for="reg-name">Nombre Completo</label>
+            <input type="text" id="reg-name" class="input-premium" placeholder="Joel Pérez" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Correo Electrónico</label>
+            <input type="email" id="reg-email" class="input-premium" placeholder="nombre@ejemplo.com" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Contraseña (Mín. 8 caracteres)</label>
+            <input type="password" id="reg-password" class="input-premium" required>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-container">
+              <input type="checkbox" id="reg-terms" required> Acepto los términos de uso y la política de privacidad.
+            </label>
+          </div>
+          <button type="submit" class="btn-primary-premium full-width">Registrar Cuenta</button>
+        </form>
+
+        <div class="auth-footer-links">
+          <a href="#login" id="link-to-login">¿Ya tiene una cuenta? Iniciar Sesión</a>
+        </div>
+      </div>
+
+      <!-- PANTALLA: RECUPERACIÓN -->
+      <div id="auth-view-recover" class="hidden">
+        <h2>Recuperar Contraseña</h2>
+        <p>Ingrese su correo y su PIN de seguridad configurado para cambiar su clave.</p>
+        <div class="error-banner hidden" id="recover-error-msg"></div>
+        <div class="success-banner hidden" id="recover-success-msg"></div>
+
+        <form id="form-recover">
+          <div class="form-group">
+            <label for="rec-email-field">Correo Electrónico</label>
+            <input type="email" id="rec-email-field" class="input-premium" required>
+          </div>
+          <div class="form-group">
+            <label for="rec-pin-field">PIN de Seguridad (4 dígitos)</label>
+            <input type="password" id="rec-pin-field" class="input-premium" maxlength="4" required>
+          </div>
+          <div class="form-group">
+            <label for="rec-new-pass">Nueva Contraseña (Mín. 8 caracteres)</label>
+            <input type="password" id="rec-new-pass" class="input-premium" required>
+          </div>
+          <button type="submit" class="btn-primary-premium full-width">Restablecer Contraseña</button>
+        </form>
+
+        <div class="auth-footer-links">
+          <a href="#login" id="link-to-login-from-rec">Regresar al Login</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DIÁLOGO DE PIN DE SEGURIDAD INTERNO PARA ÁREAS SENSIBLES -->
+  <div id="pin-prompt-dialog" class="dialog-overlay hidden">
+    <div class="dialog-card">
+      <i data-lucide="lock" class="dialog-icon"></i>
+      <h3>Área Sensible Protegida</h3>
+      <p>Ingrese su PIN de seguridad de 4 dígitos para acceder a esta sección.</p>
+      <div class="error-banner hidden" id="pin-error-msg"></div>
+      <form id="form-verify-pin-prompt">
+        <input type="password" id="pin-input-prompt" class="input-premium text-center font-lg" maxlength="4" autofocus required>
+        <div class="dialog-actions">
+          <button type="submit" class="btn-primary-premium">Verificar</button>
+          <button type="button" id="btn-cancel-pin-prompt" class="btn-secondary-premium">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DIÁLOGO GLOBAL DE COMPROBANTES (SUBIDA RAPIDA / VISUALIZACION) -->
+  <div id="upload-receipt-dialog" class="dialog-overlay hidden">
+    <div class="dialog-card">
+      <i data-lucide="upload-cloud" class="dialog-icon"></i>
+      <h3>Adjuntar Comprobante</h3>
+      <p>Suba una captura, foto o PDF de su comprobante de pago.</p>
+      <div class="error-banner hidden" id="upload-receipt-error"></div>
+      <form id="form-upload-receipt">
+        <input type="hidden" id="receipt-trans-type">
+        <input type="hidden" id="receipt-trans-id">
+        <div class="form-group">
+          <label for="receipt-file-input" class="file-drag-area" id="file-drag-label">
+            <i data-lucide="image" class="drag-icon"></i>
+            <span>Arrastre aquí su comprobante o haga clic para seleccionar</span>
+            <input type="file" id="receipt-file-input" accept=".jpg,.jpeg,.png,.pdf" class="hidden" required>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button type="submit" class="btn-primary-premium">Subir Archivo</button>
+          <button type="button" id="btn-cancel-receipt-dialog" class="btn-secondary-premium">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DIÁLOGO GLOBAL DE DETALLE (VISUALIZACIÓN DE GASTOS / INGRESOS) -->
+  <div id="transaction-detail-dialog" class="dialog-overlay hidden">
+    <div class="dialog-card scrollable-card">
+      <h3 id="detail-dialog-title">Detalle del Movimiento</h3>
+      <div class="detail-grid" id="detail-dialog-body">
+        <!-- Generado dinámicamente -->
+      </div>
+      <div class="dialog-actions" style="margin-top: 1.5rem;">
+        <button type="button" id="btn-close-detail-dialog" class="btn-secondary-premium full-width">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIÁLOGO DE ABONO A DEUDA -->
+  <div id="debt-pay-dialog" class="dialog-overlay hidden">
+    <div class="dialog-card">
+      <i data-lucide="hand-coins" class="dialog-icon"></i>
+      <h3>Abonar Pago a la Deuda</h3>
+      <div class="error-banner hidden" id="debt-pay-error"></div>
+      <form id="form-debt-pay">
+        <input type="hidden" id="debt-pay-id">
+        <div class="form-group">
+          <label for="debt-pay-amount">Monto del Abono ($)</label>
+          <input type="number" id="debt-pay-amount" class="input-premium" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="debt-pay-method">Método de Pago</label>
+          <select id="debt-pay-method" class="input-premium" required>
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta_debito">Tarjeta de Débito</option>
+            <option value="tarjeta_credito">Tarjeta de Crédito</option>
+            <option value="transferencia_bancaria">Transferencia Bancaria</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="debt-pay-account">Tarjeta/Cuenta de Cargo</label>
+          <select id="debt-pay-account" class="input-premium">
+            <!-- Cargado dinámicamente -->
+          </select>
+        </div>
+        <div class="dialog-actions">
+          <button type="submit" class="btn-primary-premium">Confirmar Pago</button>
+          <button type="button" id="btn-cancel-debt-pay" class="btn-secondary-premium">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
