@@ -211,8 +211,115 @@ document.addEventListener('DOMContentLoaded', () => {
   // CONFIGURACIÓN DE APIS (LLAMADAS AJAX)
   // ==========================================
   async function apiCall(url, method = 'GET', data = null, isMultipart = false) {
+    let phpUrl = '/api/index.php';
+    let action = '';
+    let params = [];
+
+    // Parsear rutas estilo Express a acciones PHP
+    if (url.startsWith('/api/auth/register')) action = 'register';
+    else if (url.startsWith('/api/auth/login')) action = 'login';
+    else if (url.startsWith('/api/auth/logout')) action = 'logout';
+    else if (url.startsWith('/api/auth/me')) action = 'me';
+    else if (url.startsWith('/api/auth/verify-pin')) action = 'verify-pin';
+    else if (url.startsWith('/api/auth/change-pin')) action = 'change-pin';
+    else if (url.startsWith('/api/auth/change-password')) action = 'change-password';
+    else if (url.startsWith('/api/auth/recover-password')) action = 'recover-password';
+    else if (url.startsWith('/api/months/compare')) {
+      action = 'compare_months';
+      const q = url.split('?')[1];
+      if (q) params.push(q);
+    }
+    else if (url.startsWith('/api/months/')) {
+      const parts = url.split('/');
+      const id = parts[3];
+      if (parts[4] === 'close') {
+        action = 'close_month';
+      } else {
+        action = 'update_month';
+      }
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/months')) {
+      action = method === 'POST' ? 'create_month' : 'get_months';
+    }
+    else if (url.startsWith('/api/accounts/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_account' : 'update_account';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/accounts')) {
+      action = method === 'POST' ? 'create_account' : 'get_accounts';
+    }
+    else if (url.startsWith('/api/categories/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_category' : 'update_category';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/categories')) {
+      action = method === 'POST' ? 'create_category' : 'get_categories';
+    }
+    else if (url.startsWith('/api/incomes/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_income' : 'update_income';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/incomes')) {
+      action = method === 'POST' ? 'create_income' : 'get_incomes';
+      const q = url.split('?')[1];
+      if (q) params.push(q);
+    }
+    else if (url.startsWith('/api/expenses/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_expense' : 'update_expense';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/expenses')) {
+      action = method === 'POST' ? 'create_expense' : 'get_expenses';
+      const q = url.split('?')[1];
+      if (q) params.push(q);
+    }
+    else if (url.startsWith('/api/receipts/upload')) action = 'upload_receipt';
+    else if (url.startsWith('/api/receipts')) action = 'delete_receipt';
+    else if (url.startsWith('/api/savings/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_saving' : 'update_saving';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/savings')) {
+      action = method === 'POST' ? 'create_saving' : 'get_savings';
+    }
+    else if (url.startsWith('/api/debts/')) {
+      const parts = url.split('/');
+      const id = parts[3];
+      if (parts[4] === 'pay') {
+        action = 'pay_debt';
+      } else {
+        action = method === 'DELETE' ? 'delete_debt' : 'update_debt';
+      }
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/debts')) {
+      action = method === 'POST' ? 'create_debt' : 'get_debts';
+    }
+    else if (url.startsWith('/api/recurring/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_recurring' : 'update_recurring';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/recurring')) {
+      action = method === 'POST' ? 'create_recurring' : 'get_recurring';
+    }
+    else if (url.startsWith('/api/activity')) action = 'get_activity';
+    else if (url.startsWith('/api/backup/export')) action = 'export_backup';
+    else if (url.startsWith('/api/backup/import')) action = 'import_backup';
+
+    // Armar URL con la accion de consulta de PHP
+    params.unshift(`action=${action}`);
+    phpUrl += '?' + params.join('&');
+
+    // Forzar el metodo POST si se suben archivos (en PHP la subida requiere POST nativo)
     const options = {
-      method,
+      method: isMultipart ? 'POST' : method,
       headers: {}
     };
 
@@ -220,13 +327,12 @@ document.addEventListener('DOMContentLoaded', () => {
       options.headers['Content-Type'] = 'application/json';
       options.body = JSON.stringify(data);
     } else if (data && isMultipart) {
-      options.body = data; // FormData
+      options.body = data;
     }
 
-    const response = await fetch(url, options);
+    const response = await fetch(phpUrl, options);
     
     if (response.status === 410) {
-      // Sesión expirada
       state.user = null;
       sessionStorage.clear();
       router();

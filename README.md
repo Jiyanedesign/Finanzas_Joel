@@ -1,75 +1,67 @@
-# AuraFinance - Gestor de Finanzas Personales Premium
+# AuraFinance - Gestor de Finanzas Personales Premium (PHP & MySQL)
 
-AuraFinance es una aplicación web profesional, segura y moderna diseñada para llevar el control mensual absoluto de sus finanzas personales: presupuestos por categorías, ingresos, gastos detallados, cuentas y tarjetas, metas de ahorro, deudas, comprobantes adjuntos, análisis de métricas y gráficos interactivos.
+AuraFinance es una aplicación web profesional, segura, responsiva y premium diseñada para llevar el control mensual de sus finanzas: presupuestos por categorías, ingresos, gastos detallados, cuentas y tarjetas, metas de ahorro, deudas, comprobantes adjuntos y gráficos interactivos.
 
-## Características Clave
-* **Seguridad Profesional**: Inicio de sesión seguro con contraseñas cifradas en `bcryptjs`, protección contra inyecciones SQL (sentencias preparadas), prevención de ataques XSS y cabeceras de seguridad robustas mediante Helmet.
-* **Control Inteligente de Intentos de Login**: Bloqueo temporal automático de cuentas por 15 minutos tras 5 intentos fallidos consecutivas.
-* **PIN de Acceso Interno**: PIN opcional de 4 dígitos para resguardar áreas sensibles (tarjetas, reportes, configuración) contra miradas indiscretas.
-* **Modo Privacidad**: Oculte o desenfoque todos los saldos y montos sensibles de la pantalla con un solo clic.
-* **Dashboard Premium Completo**: Gráficos interactivos de ingresos vs gastos, distribución por categoría y evolución de saldo diario mediante Chart.js.
-* **Cierre de Mes Financiero**: Cierre períodos contables de forma segura, transfiriendo balances sobrantes al mes siguiente y recalculando gastos recurrentes planificados.
-* **Gestión de Comprobantes**: Suba y asocie capturas o archivos PDF como justificantes para cada ingreso o gasto.
-* **Importación y Exportación**: Exporte copias de respaldo en JSON o descargue sus registros en formato CSV. Importe transacciones desde archivos CSV con validación en vivo.
+Esta versión está construida en **PHP 8.x** y **MySQL**, lo que garantiza compatibilidad nativa e instantánea con todos los planes de hosting de **Hostinger** (compartido y VPS) sin requerir servicios en segundo plano ni consolas Node.js.
 
 ---
 
-## Requisitos Previos
-* **Node.js** (versión 18 o superior recomendada)
-* **NPM** (incluido con Node.js)
+## Estructura del Proyecto
+* **`api/config.php`**: Credenciales de la base de datos MySQL (Host, DB Name, User, Password).
+* **`api/db_connect.php`**: Inicialización del conector seguro PDO con sentencias preparadas contra inyecciones SQL.
+* **`api/setup.php`**: Instalador web automático de tablas y semillas de base de datos.
+* **`api/index.php`**: Enrutador principal que procesa de forma segura todas las APIs (auth, CRUDs, carga de comprobantes, reportes).
+* **`public/`**: Frontend (HTML5, CSS3, JS Vanilla SPA, Chart.js).
 
 ---
 
-## Instalación y Configuración
+## 🛠️ PASO A PASO: Configuración de Base de Datos y Despliegue en Hostinger
 
-1. Abra una terminal en el directorio del proyecto:
-   ```bash
-   cd C:\Users\JOEL\.gemini\antigravity\scratch\personal-finance-dashboard
-   ```
+Siga estos pasos sencillos para subir y arrancar su aplicación en Hostinger:
 
-2. Instale todas las dependencias requeridas ejecutando:
-   ```bash
-   npm install
-   ```
+### Paso 1: Crear la Base de Datos MySQL en Hostinger
+1. Inicie sesión en su panel de Hostinger (**hPanel**).
+2. En el menú izquierdo, diríjase a **Bases de datos** -> **Bases de datos MySQL**.
+3. En la sección **Crear una nueva base de datos MySQL y usuario**:
+   * **Nombre de la base de datos**: Escriba un nombre (ejemplo: `finanzas`). El nombre completo tendrá un prefijo generado por Hostinger (ejemplo: `u123456_finanzas`).
+   * **Nombre de usuario MySQL**: Escriba un usuario (ejemplo: `joel`). El usuario completo tendrá prefijo (ejemplo: `u123456_joel`).
+   * **Contraseña**: Genere una contraseña segura y cópiela.
+4. Haga clic en **Crear**. Anote estos datos en un lugar seguro.
 
-3. (Opcional) Verifique la base de datos local y los datos semilla ejecutando el script de validación:
-   ```bash
-   node test-api.js
-   ```
+### Paso 2: Configurar las Credenciales en el Código
+Abra el archivo [api/config.php](file:///C:/Users/JOEL/.gemini/antigravity/scratch/personal-finance-dashboard/api/config.php) de su proyecto y reemplace las constantes con los datos creados en el Paso 1:
 
----
-
-## Cómo Iniciar la Aplicación
-
-Inicie el servidor Express de desarrollo con recarga automática:
-```bash
-npm run dev
-```
-O inicie en modo de producción clásico:
-```bash
-npm start
+```php
+define('DB_HOST', '127.0.0.1'); // Hostinger suele usar localhost o 127.0.0.1
+define('DB_NAME', 'u123456_finanzas'); // Tu nombre completo de base de datos
+define('DB_USER', 'u123456_joel');     // Tu usuario completo de base de datos
+define('DB_PASS', 'TU_CONTRASEÑA_CREADA');
 ```
 
-Una vez que el servidor esté activo, abra su navegador web favorito y acceda a:
-👉 [http://localhost:3000](http://localhost:3000)
+### Paso 3: Subir el Código a Hostinger
+* **Opción A (Git Auto-Deploy - Recomendado)**:
+  1. En hPanel, vaya a **Sitios Web** -> **Git**.
+  2. Ingrese la URL de su repositorio de GitHub: `https://github.com/Jiyanedesign/Finanzas_Joel.git`.
+  3. Indique la rama principal: `main`.
+  4. Haga clic en **Crear**.
+  5. En la sección de Auto-Despliegue, copie la **URL del Webhook** y configúrela en su panel de GitHub (dentro de su repositorio, vaya a *Settings* -> *Webhooks* -> *Add Webhook* -> pegue en *Payload URL* -> guarde). Ahora, cada vez que haga `git push`, Hostinger actualizará la aplicación.
+* **Opción B (Administrador de Archivos)**:
+  1. Descargue el proyecto como un archivo `.zip`.
+  2. En hPanel, vaya a **Archivos** -> **Administrador de Archivos**.
+  3. Suba el archivo `.zip` dentro de la carpeta `public_html` y extráigalo ahí mismo.
+
+### Paso 4: Ejecutar el Instalador Web Automático (Crear Tablas)
+Una vez que el código esté arriba y configurado, abra su navegador web favorito y acceda a la siguiente ruta de instalación:
+👉 **`https://tudominio.com/api/setup.php`** (o `http://localhost/api/setup.php` si prueba localmente en XAMPP/WampServer).
+
+Esta página:
+1. Creará automáticamente las 13 tablas relacionales en tu base de datos MySQL de Hostinger.
+2. Sembrará los datos y transacciones iniciales de prueba para que puedas empezar inmediatamente.
 
 ---
 
-## Datos de Acceso de Prueba (Semilla)
-Para facilitar la evaluación inicial, la base de datos se crea con un usuario y transacciones realistas sembrados por defecto:
-
-* **Correo Electrónico**: `admin@admin.com`
+## 🔑 Credenciales por Defecto de Prueba
+* **Usuario/Email**: `admin@admin.com`
 * **Contraseña**: `admin123`
-* **PIN de Seguridad Interno**: `1234`
-
----
-
-## Estructura de Importación de Archivo CSV
-Para importar transacciones masivamente desde el módulo de configuración general, suba un archivo `.csv` con la siguiente estructura de columnas (sin incluir cabecera):
-
-```csv
-tipo, fecha, monto, titulo, categoria, metodo, notas
-expense, 2026-07-02, 15.50, Almuerzo Ejecutivo, Alimentación, tarjeta_debito, restaurante local
-income, 2026-07-03, 350.00, Trabajo Cliente Freelance, Ahorro, transferencia, desarrollo web
-```
-*(Los tipos permitidos son `expense` o `income`)*
+* **PIN de seguridad interno**: `1234`
+*(Modifique estas credenciales en la pestaña Ajustes tras iniciar sesión por primera vez).*
