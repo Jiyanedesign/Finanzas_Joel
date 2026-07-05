@@ -54,11 +54,12 @@ if ($pdo_mysql && defined('DB_HOST')) {
                 echo "Tabla <strong>$t</strong>: <span style='color:green;'>✔️ Existe</span> (Registros: $count)<br>";
                 
                 if ($t === 'users') {
-                    $stmtUser = $pdo->query("SELECT id, name, email FROM users");
+                    $stmtUser = $pdo->query("SELECT id, name, email, password_hash FROM users");
                     $users = $stmtUser->fetchAll();
                     echo "--- Usuarios registrados:<br>";
                     foreach ($users as $u) {
-                        echo "------ ID: {$u['id']} | Nombre: {$u['name']} | Email: {$u['email']}<br>";
+                        $verified = password_verify('admin123', $u['password_hash']);
+                        echo "------ ID: {$u['id']} | Nombre: {$u['name']} | Email: {$u['email']} | Verificación 'admin123': " . ($verified ? "<span style='color:green;'>✔️ CORRECTA</span>" : "<span style='color:red;'>❌ INCORRECTA</span>") . "<br>";
                     }
                 }
             } catch (PDOException $ex) {
