@@ -1567,8 +1567,21 @@ textarea.input-premium {
 }
 
 @media (max-width: 900px) {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  
   #app-container {
     grid-template-columns: 1fr;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  #main-content {
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   #sidebar {

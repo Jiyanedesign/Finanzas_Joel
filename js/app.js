@@ -175,6 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Cerrar sidebar en móvil al cambiar de vista
     els.sidebar.classList.remove('open');
+
+    // Desplazar el contenido principal al inicio para alinear cabeceras en PWA/iOS
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
   }
 
   function showAuthView(viewName) {
@@ -3730,4 +3737,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.warn('Error al registrar PWA Service Worker:', err));
     });
   }
+  // Corregir el scroll de iOS Safari cuando se cierra el teclado virtual
+  document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        setTimeout(() => {
+          mainContent.scrollTop = mainContent.scrollTop;
+        }, 100);
+      }
+      window.scrollTo(0, 0);
+    }
+  });
 });
