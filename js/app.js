@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AuraFinance - LÓGICA PRINCIPAL DEL FRONTEND (SPA)
+   JiyaneFinance - LÓGICA PRINCIPAL DEL FRONTEND (SPA)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -357,7 +357,7 @@ try {
     }
 
     echo "<h3>🎉 Configuración completada. Ya puedes iniciar sesión desde cero.</h3>";
-    echo "<p><a href='/index.html' style='font-size: 1.15rem; font-weight: bold; color: #4F46E5;'>Ir a la Página de Login de AuraFinance</a></p>";
+    echo "<p><a href='/index.html' style='font-size: 1.15rem; font-weight: bold; color: #4F46E5;'>Ir a la Página de Login de JiyaneFinance</a></p>";
 
 } catch (PDOException $e) {
     echo "<h2 class='text-danger'>❌ Error durante la instalación:</h2>";

@@ -1,6 +1,6 @@
 {
-  "name": "AuraFinance - Finanzas Personales",
-  "short_name": "AuraFinance",
+  "name": "JiyaneFinance - Finanzas Personales",
+  "short_name": "JiyaneFinance",
   "description": "Dashboard inteligente de finanzas personales, presupuestos y control de deudas.",
   "start_url": "/index.html",
   "display": "standalone",
