@@ -1939,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${linkedInfo}
           </div>
           <div class="card-actions-row">
+            <button class="btn-card-action btn-view-consumos" data-id="${a.id}" title="Ver consumos del mes" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="receipt"></i></button>
             <button class="btn-card-action btn-edit-card" data-id="${a.id}" title="Editar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="edit-2"></i></button>
             <button class="btn-card-action btn-delete-card" data-id="${a.id}" title="Eliminar" style="background-color: ${a.text_color === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}; color: ${a.text_color || '#FFFFFF'}"><i data-lucide="trash-2"></i></button>
           </div>
@@ -2052,9 +2053,95 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    document.querySelectorAll('.btn-view-consumos').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+        const a = state.accounts.find(x => x.id === id);
+        if (a) {
+          openCardConsumosDialog(a);
+        }
+      });
+    });
+
     lucide.createIcons();
     applyPrivacyMode();
   }
+
+  function openCardConsumosDialog(a) {
+    const dialog = document.getElementById('card-consumos-dialog');
+    const title = document.getElementById('consumos-dialog-title');
+    const totalVal = document.getElementById('consumos-total-val');
+    const limitInfo = document.getElementById('consumos-limit-info');
+    const tableBody = document.getElementById('consumos-table-body');
+    const linkInfo = document.getElementById('consumos-link-info');
+
+    title.textContent = `Consumos: ${a.name}`;
+    tableBody.innerHTML = '';
+    
+    // Filtrar los gastos del mes que pertenezcan a esta cuenta/tarjeta
+    const cardExpenses = state.expenses.filter(e => e.account_id === a.id && e.status === 'pagado');
+    const totalSpent = cardExpenses.reduce((acc, e) => acc + e.amount, 0);
+    
+    totalVal.textContent = `$${Number(totalSpent).toFixed(2)}`;
+
+    // Mostrar información de límite si aplica
+    if (a.type === 'credito' || a.type === 'tarjeta_credito') {
+      const limit = a.credit_limit || 0;
+      const available = Math.max(0, limit - totalSpent);
+      limitInfo.innerHTML = `Límite: <strong>$${Number(limit).toFixed(2)}</strong> | Disponible: <strong>$${Number(available).toFixed(2)}</strong>`;
+      limitInfo.style.display = 'block';
+    } else {
+      limitInfo.style.display = 'none';
+    }
+
+    // Poblar la tabla de gastos
+    if (cardExpenses.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 1.5rem 0; color: var(--color-text-muted);">No hay consumos registrados este mes.</td></tr>';
+    } else {
+      cardExpenses.forEach(e => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${formatDate(e.date)}</td>
+          <td>
+            <div style="font-weight: 600;">${e.title}</div>
+            <div style="font-size: 0.75rem; color: var(--color-text-muted);">${e.category_name || 'Sin Categoría'}</div>
+          </td>
+          <td class="text-danger" style="font-weight: 600;">-$${Number(e.amount).toFixed(2)}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Mostrar vinculación de pago
+    linkInfo.innerHTML = '';
+    if (a.parent_account_id) {
+      const parentAcc = state.accounts.find(p => p.id === a.parent_account_id);
+      if (parentAcc) {
+        linkInfo.innerHTML = `
+          <i data-lucide="link" style="width: 12px; height: 12px; color: var(--color-primary);"></i>
+          <span style="font-size: 0.8rem;">Esta tarjeta se debita/paga desde: <strong>${parentAcc.name}</strong></span>
+        `;
+      }
+    } else {
+      // Ver si tiene tarjetas ligadas
+      const linked = state.accounts.filter(c => c.parent_account_id === a.id);
+      if (linked.length > 0) {
+        linkInfo.innerHTML = `
+          <i data-lucide="link" style="width: 12px; height: 12px; color: var(--color-primary);"></i>
+          <span style="font-size: 0.8rem;">Tarjetas asociadas a esta cuenta: <strong>${linked.map(l => l.name).join(', ')}</strong></span>
+        `;
+      }
+    }
+    
+    dialog.classList.remove('hidden');
+    lucide.createIcons();
+    applyPrivacyMode();
+  }
+
+  // Evento para cerrar el diálogo
+  document.getElementById('btn-close-consumos-dialog').addEventListener('click', () => {
+    document.getElementById('card-consumos-dialog').classList.add('hidden');
+  });
 
   document.getElementById('form-account').addEventListener('submit', async (e) => {
     e.preventDefault();

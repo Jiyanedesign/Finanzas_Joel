@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- CSS Principal -->
-  <link rel="stylesheet" href="css/style.css?v=10.0">
+  <link rel="stylesheet" href="css/style.css?v=11.0">
   
   <!-- Lucide Icons (Iconos vectoriales modernos de trazo fino) -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
@@ -1626,6 +1626,44 @@
     </div>
   </div>
 
+  <!-- DIÁLOGO DE CONSUMOS DE TARJETA -->
+  <div id="card-consumos-dialog" class="dialog-overlay hidden">
+    <div class="dialog-card scrollable-card" style="max-width: 550px;">
+      <h3 id="consumos-dialog-title">Consumos de la Tarjeta</h3>
+      <p id="consumos-dialog-subtitle" style="font-size: 0.85rem; color: var(--color-text-muted);">Detalle de los consumos realizados este mes.</p>
+      
+      <div style="margin: 1rem 0; padding: 1rem; background-color: var(--bg-primary); border-radius: var(--radius-md); text-align: center;">
+        <span style="font-size: 0.85rem; color: var(--color-text-muted); display: block;">Total Consumido este Mes</span>
+        <strong id="consumos-total-val" style="font-size: 2rem; color: var(--color-danger); font-family: var(--font-headings); display: block; margin-top: 0.25rem;">$0.00</strong>
+        <span id="consumos-limit-info" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 0.25rem;"></span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-premium" style="font-size: 0.85rem;">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Detalle</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody id="consumos-table-body">
+            <!-- Cargado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="consumos-link-info" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.85; display: flex; align-items: center; gap: 0.25rem;">
+        <!-- Relación de fondo -->
+      </div>
+
+      <div class="dialog-actions" style="margin-top: 1.5rem;">
+        <button type="button" id="btn-close-consumos-dialog" class="btn-secondary-premium full-width">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- DIÁLOGO DE ABONO A DEUDA -->
   <div id="debt-pay-dialog" class="dialog-overlay hidden">
     <div class="dialog-card">
@@ -1678,6 +1716,6 @@
   <!-- Overlay para cerrar el sidebar en móvil al tocar fuera -->
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-  <script src="js/app.js?v=10.0"></script>
+  <script src="js/app.js?v=11.0"></script>
 </body>
 </html>
