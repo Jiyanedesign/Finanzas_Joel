@@ -2938,8 +2938,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  });
-
   // ==========================================
   // GASTOS FUTUROS Y PROVISIONES
   // ==========================================
