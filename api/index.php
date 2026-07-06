@@ -81,6 +81,9 @@ try {
             $stmtInsert->execute([$name, $email, $hash]);
             $newId = $pdo->lastInsertId();
 
+            // Sembrar datos básicos (cuentas, categorías, subcategorías y mes actual) para el nuevo usuario
+            seedNewUserData($pdo, $newId);
+
             logActivity($pdo, $newId, 'REGISTER', 'Usuario registrado con éxito.');
             echo json_encode(['message' => 'Usuario registrado con éxito. Ahora puede iniciar sesión.']);
             break;
@@ -1316,5 +1319,57 @@ try {
     if ($code < 400 || $code > 599) $code = 400;
     http_response_code($code);
     echo json_encode(['error' => $e->getMessage()]);
+}
+
+// Inicializa una cuenta de usuario nuevo con datos de demostración funcionales
+function seedNewUserData($pdo, $userId) {
+    // 1. Cuentas semilla
+    $accounts = [
+        ['name' => 'Efectivo Personal', 'bank' => 'N/A', 'type' => 'efectivo', 'last_four' => null, 'color' => '#F59E0B', 'initial_balance' => 0.0],
+        ['name' => 'Cuenta Principal', 'bank' => 'Banco Pichincha', 'type' => 'cuenta_bancaria', 'last_four' => '1234', 'color' => '#3B82F6', 'initial_balance' => 0.0],
+        ['name' => 'Billetera Digital Deuna', 'bank' => 'Banco Pichincha', 'type' => 'billetera_digital', 'last_four' => null, 'color' => '#10B981', 'initial_balance' => 0.0]
+    ];
+
+    $stmtAcc = $pdo->prepare("INSERT INTO accounts (user_id, name, bank, type, last_four, color, initial_balance, credit_limit) VALUES (?, ?, ?, ?, ?, ?, ?, 0)");
+    foreach ($accounts as $acc) {
+        $stmtAcc->execute([
+            $userId, $acc['name'], $acc['bank'], $acc['type'], $acc['last_four'], $acc['color'], $acc['initial_balance']
+        ]);
+    }
+
+    // 2. Categorías y subcategorías semilla
+    $categories = [
+        ['name' => 'Alimentación', 'icon' => 'utensils', 'color' => '#EF4444', 'budget' => 200.0, 'rule_type' => 'necesidad', 'subs' => ['Supermercado', 'Restaurantes', 'Cafés']],
+        ['name' => 'Transporte', 'icon' => 'car', 'color' => '#3B82F6', 'budget' => 50.0, 'rule_type' => 'necesidad', 'subs' => ['Gasolina', 'Taxi/Uber', 'Mantenimiento']],
+        ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#10B981', 'budget' => 300.0, 'rule_type' => 'necesidad', 'subs' => ['Alquiler', 'Servicios básicos', 'Internet', 'Reparaciones']],
+        ['name' => 'Entretenimiento', 'icon' => 'film', 'color' => '#F59E0B', 'budget' => 100.0, 'rule_type' => 'deseo', 'subs' => ['Cine', 'Suscripciones', 'Salidas']],
+        ['name' => 'Salud', 'icon' => 'heart', 'color' => '#EC4899', 'budget' => 50.0, 'rule_type' => 'necesidad', 'subs' => ['Medicinas', 'Consultas', 'Seguro']],
+        ['name' => 'Educación', 'icon' => 'book', 'color' => '#8B5CF6', 'budget' => 0.0, 'rule_type' => 'necesidad', 'subs' => ['Cursos', 'Libros', 'Materiales']],
+        ['name' => 'Ahorro', 'icon' => 'piggy-bank', 'color' => '#06B6D4', 'budget' => 100.0, 'rule_type' => 'ahorro', 'subs' => ['Fondo Emergencia', 'Inversiones']]
+    ];
+
+    $stmtCat = $pdo->prepare("INSERT INTO categories (user_id, name, icon, color, budget, rule_type) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmtSub = $pdo->prepare("INSERT INTO subcategories (category_id, name) VALUES (?, ?)");
+
+    foreach ($categories as $cat) {
+        $stmtCat->execute([$userId, $cat['name'], $cat['icon'], $cat['color'], $cat['budget'], $cat['rule_type']]);
+        $catId = $pdo->lastInsertId();
+
+        foreach ($cat['subs'] as $sub) {
+            $stmtSub->execute([$catId, $sub]);
+        }
+    }
+    
+    // 3. Crear una configuración de mes por defecto para el mes actual
+    $currentMonth = intval(date('n')); // 1-12
+    $currentYear = intval(date('Y'));
+    $monthNames = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    ];
+    $monthLabel = $monthNames[$currentMonth] . " " . $currentYear;
+    
+    $stmtMonth = $pdo->prepare("INSERT INTO monthly_configs (user_id, period, initial_balance, saving_goal, status) VALUES (?, ?, 0.0, 100.0, 'abierto')");
+    $stmtMonth->execute([$userId, $monthLabel]);
 }
 ?>
