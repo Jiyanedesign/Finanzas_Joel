@@ -1015,6 +1015,68 @@ try {
             break;
 
         // ------------------------------------------
+        // GASTOS FUTUROS Y RESERVAS
+        // ------------------------------------------
+        case 'get_future_expenses':
+            requireAuth();
+            $stmt = $pdo->prepare("SELECT * FROM future_expenses WHERE user_id = ? ORDER BY status DESC, target_date ASC, id DESC");
+            $stmt->execute([$_SESSION['user_id']]);
+            echo json_encode($stmt->fetchAll());
+            break;
+
+        case 'create_future_expense':
+            requireAuth();
+            $data = getJsonInput();
+            $title = clean($data['title'] ?? '');
+            $amount = floatval($data['amount'] ?? 0);
+            $target_date = clean($data['target_date'] ?? null);
+            $deduct = intval($data['deduct_from_budget'] ?? 0);
+            $notes = clean($data['notes'] ?? '');
+
+            if (empty($title) || $amount <= 0) {
+                throw new Exception('Título y monto válido son requeridos.');
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO future_expenses (user_id, title, amount, target_date, deduct_from_budget, notes) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $title, $amount, $target_date ?: null, $deduct, $notes]);
+
+            logActivity($pdo, $_SESSION['user_id'], 'CREATE_FUTURE_EXPENSE', "Gasto futuro creado: {$title} por \${$amount}");
+            echo json_encode(['message' => 'Gasto futuro registrado con éxito.']);
+            break;
+
+        case 'update_future_expense':
+            requireAuth();
+            $data = getJsonInput();
+            $id = intval($data['id'] ?? 0);
+            $title = clean($data['title'] ?? '');
+            $amount = floatval($data['amount'] ?? 0);
+            $target_date = clean($data['target_date'] ?? null);
+            $deduct = intval($data['deduct_from_budget'] ?? 0);
+            $status = clean($data['status'] ?? 'pendiente');
+            $notes = clean($data['notes'] ?? '');
+
+            if (empty($title) || $amount <= 0) {
+                throw new Exception('Título y monto válido son requeridos.');
+            }
+
+            $stmt = $pdo->prepare("UPDATE future_expenses SET title = ?, amount = ?, target_date = ?, deduct_from_budget = ?, status = ?, notes = ? WHERE id = ? AND user_id = ?");
+            $stmt->execute([$title, $amount, $target_date ?: null, $deduct, $status, $notes, $id, $_SESSION['user_id']]);
+
+            logActivity($pdo, $_SESSION['user_id'], 'UPDATE_FUTURE_EXPENSE', "Gasto futuro actualizado: {$title}");
+            echo json_encode(['message' => 'Gasto futuro actualizado con éxito.']);
+            break;
+
+        case 'delete_future_expense':
+            requireAuth();
+            $id = intval($_GET['id'] ?? 0);
+            $stmt = $pdo->prepare("DELETE FROM future_expenses WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $_SESSION['user_id']]);
+            
+            logActivity($pdo, $_SESSION['user_id'], 'DELETE_FUTURE_EXPENSE', "Gasto futuro eliminado ID {$id}");
+            echo json_encode(['message' => 'Gasto futuro eliminado con éxito.']);
+            break;
+
+        // ------------------------------------------
         // DEUDAS Y PAGOS
         // ------------------------------------------
         case 'get_debts':

@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     debts: [],
     savings: [],
     recurring: [],
+    futureExpenses: [],
     privacyMode: false,
     selectedCalDate: new Date(),
     charts: {} // Almacena instancias de Chart.js
@@ -138,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (hash === '#categorias') { targetViewId = 'view-categorias'; targetNavId = 'nav-categorias'; }
     else if (hash === '#recurrentes') { targetViewId = 'view-recurrentes'; targetNavId = 'nav-recurrentes'; }
     else if (hash === '#deudas') { targetViewId = 'view-deudas'; targetNavId = 'nav-deudas'; }
+    else if (hash === '#gastos-futuros') { targetViewId = 'view-gastos-futuros'; targetNavId = 'nav-gastos-futuros'; }
     else if (hash === '#metas') { targetViewId = 'view-metas'; targetNavId = 'nav-metas'; }
     else if (hash === '#calendario') { targetViewId = 'view-calendario'; targetNavId = 'nav-calendario'; }
     else if (hash === '#comprobantes') { targetViewId = 'view-comprobantes'; targetNavId = 'nav-comprobantes'; }
@@ -346,6 +348,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     else if (url.startsWith('/api/savings')) {
       action = method === 'POST' ? 'create_saving' : 'get_savings';
+    }
+    else if (url.startsWith('/api/future_expenses/')) {
+      const id = url.split('/')[3];
+      action = method === 'DELETE' ? 'delete_future_expense' : 'update_future_expense';
+      params.push(`id=${id}`);
+    }
+    else if (url.startsWith('/api/future_expenses')) {
+      action = method === 'POST' ? 'create_future_expense' : 'get_future_expenses';
     }
     else if (url.startsWith('/api/debts/')) {
       const parts = url.split('/');
@@ -743,6 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.debts = await apiCall('/api/debts');
       state.savings = await apiCall('/api/savings');
       state.recurring = await apiCall('/api/recurring');
+      state.futureExpenses = await apiCall('/api/future_expenses');
       
       // Recargar saldo y cuentas actualizados
       state.accounts = await apiCall('/api/accounts');
@@ -792,6 +803,9 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'view-deudas':
         renderDeudas();
         break;
+      case 'view-gastos-futuros':
+        renderGastosFuturos();
+        break;
       case 'view-metas':
         renderSavings();
         break;
@@ -830,8 +844,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const savingGoal = state.activeMonthConfig.saving_goal;
     const savingsSaved = state.savings.reduce((acc, s) => acc + s.saved_amount, 0);
     
-    // Safe-to-Spend (Dinero Libre de Culpa)
-    const safeToSpend = availableBalance - pendingExpenses - savingGoal;
+    // Safe-to-Spend (Dinero Libre de Culpa) - Se restan los gastos futuros provistos para debitar
+    const activeFutureDeductions = state.futureExpenses
+      ? state.futureExpenses.filter(f => f.status === 'pendiente' && parseInt(f.deduct_from_budget) === 1).reduce((acc, f) => acc + parseFloat(f.amount), 0)
+      : 0;
+
+    const safeToSpend = availableBalance - pendingExpenses - savingGoal - activeFutureDeductions;
 
     // KPI UI Updates
     document.getElementById('kpi-initial-budget').textContent = formatCurrency(initialBudget);
@@ -857,9 +875,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Secondary KPIs
+    const cardAccountsIds = state.accounts.filter(a => a.type === 'tarjeta_credito' || a.type === 'credito' || a.type === 'tarjeta_debito').map(a => a.id);
+    const cardSpent = state.expenses.filter(e => cardAccountsIds.includes(e.account_id) && e.status === 'pagado').reduce((sum, e) => sum + e.amount, 0);
+
     document.getElementById('kpi-month-saving').textContent = formatCurrency(savingsSaved);
     document.getElementById('kpi-pending-expenses').textContent = formatCurrency(pendingExpenses);
     document.getElementById('kpi-cash-payments').textContent = formatCurrency(cashPayments);
+    document.getElementById('kpi-card-spent').textContent = formatCurrency(cardSpent);
 
     // Progreso del presupuesto usado
     const expensePct = initialBudget > 0 ? Math.min(100, (totalExpenses / initialBudget) * 100) : 0;
@@ -2916,8 +2938,228 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('btn-cancel-goal').addEventListener('click', () => {
-    renderSavings();
+  });
+
+  // ==========================================
+  // GASTOS FUTUROS Y PROVISIONES
+  // ==========================================
+  async function renderGastosFuturos() {
+    const tableBody = document.getElementById('future-expenses-table-body');
+    const form = document.getElementById('form-future-expense');
+    
+    // Resetear formulario
+    form.reset();
+    document.getElementById('future-id-field').value = '';
+    document.getElementById('future-form-title').textContent = 'Planificar Gasto Futuro';
+    document.getElementById('btn-cancel-future').classList.add('hidden');
+    
+    tableBody.innerHTML = '';
+    
+    if (!state.futureExpenses || state.futureExpenses.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 2rem 0; color: var(--color-text-muted);">No hay gastos futuros planificados.</td></tr>';
+      return;
+    }
+
+    state.futureExpenses.forEach(f => {
+      const row = document.createElement('tr');
+      
+      // Formatear fecha
+      const dateStr = f.target_date ? formatDate(f.target_date) : 'Sin fecha objetivo';
+      
+      // Tipo (Deduce vs Nota)
+      const deductVal = parseInt(f.deduct_from_budget);
+      const deductBadge = deductVal === 1 
+        ? '<span class="badge-premium activa" style="background-color: var(--color-primary); color: #fff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Deduce Presupuesto</span>'
+        : '<span class="badge-premium pendiente" style="background-color: var(--color-text-muted); color: #fff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Solo Nota</span>';
+
+      // Estado (Pendiente, Realizado, Cancelado)
+      let statusBadge = '';
+      if (f.status === 'pendiente') {
+        statusBadge = '<span class="badge-premium pendiente">Pendiente</span>';
+      } else if (f.status === 'realizado') {
+        statusBadge = '<span class="badge-premium pagado">Realizado</span>';
+      } else {
+        statusBadge = '<span class="badge-premium cancelado">Cancelado</span>';
+      }
+
+      // Notas/Tooltips
+      const notesTooltip = f.notes ? `<div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.15rem;">📝 ${f.notes}</div>` : '';
+
+      // Acciones disponibles
+      let actions = '';
+      if (f.status === 'pendiente') {
+        actions = `
+          <div class="action-buttons-cell">
+            <button class="btn-action-table btn-complete-future" data-id="${f.id}" title="Marcar como Realizado"><i data-lucide="check"></i></button>
+            <button class="btn-action-table btn-cancel-future-status" data-id="${f.id}" title="Marcar como Cancelado"><i data-lucide="ban"></i></button>
+            <button class="btn-action-table btn-edit-future" data-id="${f.id}" title="Editar"><i data-lucide="edit-2"></i></button>
+            <button class="btn-action-table delete btn-delete-future" data-id="${f.id}" title="Eliminar"><i data-lucide="trash-2"></i></button>
+          </div>
+        `;
+      } else {
+        actions = `
+          <div class="action-buttons-cell">
+            <button class="btn-action-table delete btn-delete-future" data-id="${f.id}" title="Eliminar"><i data-lucide="trash-2"></i></button>
+          </div>
+        `;
+      }
+
+      row.innerHTML = `
+        <td>
+          <div style="font-weight: 600;">${f.title}</div>
+          <div style="font-size: 0.75rem; color: var(--color-text-muted);">${dateStr}</div>
+          ${notesTooltip}
+        </td>
+        <td style="font-weight: 600;">$${Number(f.amount).toFixed(2)}</td>
+        <td>${deductBadge}</td>
+        <td>${statusBadge}</td>
+        <td>${actions}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    // Vincular eventos de la tabla
+    // 1. Completar
+    document.querySelectorAll('.btn-complete-future').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+        const f = state.futureExpenses.find(x => x.id === id);
+        if (!f) return;
+
+        let registerAsRealExpense = confirm(`¿Desea cambiar el estado de "${f.title}" a realizado?\n\nPresione ACEPTAR si desea registrarlo también como un GASTO REAL en el mes actual, o CANCELAR si solo desea marcarlo como completado en el historial.`);
+        
+        try {
+          if (registerAsRealExpense) {
+            // Preguntar detalles rápidos para el gasto real
+            // Por defecto, categoría Sin Categoría (o la primera) y cuenta Efectivo
+            const accountsList = state.accounts;
+            const accountId = accountsList.length > 0 ? accountsList[0].id : null;
+            const categoryId = state.categories.length > 0 ? state.categories[0].id : null;
+
+            const expenseData = {
+              month_config_id: state.activeMonthId,
+              date: new Date().toISOString().split('T')[0],
+              time: new Date().toLocaleTimeString('es-ES', { hour12: false }).substring(0, 5),
+              amount: parseFloat(f.amount),
+              title: `[Planificado] ${f.title}`,
+              category_id: categoryId,
+              payment_method: accountsList.length > 0 ? accountsList[0].type : 'efectivo',
+              account_id: accountId,
+              expense_type: 'variable',
+              status: 'pagado',
+              notes: f.notes || ''
+            };
+            await apiCall('/api/expenses', 'POST', expenseData);
+          }
+
+          // Actualizar estado del gasto futuro
+          f.status = 'realizado';
+          await apiCall(`/api/future_expenses/${id}`, 'PUT', f);
+          alertSuccess('Gasto futuro completado.');
+          await loadMonthData();
+          renderGastosFuturos();
+        } catch (err) {
+          alertError(err.error || 'Error al completar el gasto futuro.');
+        }
+      });
+    });
+
+    // 2. Cancelar
+    document.querySelectorAll('.btn-cancel-future-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+        const f = state.futureExpenses.find(x => x.id === id);
+        if (f) {
+          try {
+            f.status = 'cancelado';
+            await apiCall(`/api/future_expenses/${id}`, 'PUT', f);
+            alertSuccess('Gasto futuro cancelado.');
+            await loadMonthData();
+            renderGastosFuturos();
+          } catch (err) {
+            alertError(err.error || 'Error al actualizar.');
+          }
+        }
+      });
+    });
+
+    // 3. Editar
+    document.querySelectorAll('.btn-edit-future').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+        const f = state.futureExpenses.find(x => x.id === id);
+        if (f) {
+          document.getElementById('future-id-field').value = f.id;
+          document.getElementById('future-title').value = f.title;
+          document.getElementById('future-amount').value = f.amount;
+          document.getElementById('future-date').value = f.target_date || '';
+          document.getElementById('future-deduct').value = f.deduct_from_budget;
+          document.getElementById('future-notes').value = f.notes || '';
+          
+          document.getElementById('future-form-title').textContent = 'Editar Gasto Futuro';
+          document.getElementById('btn-cancel-future').classList.remove('hidden');
+          
+          document.getElementById('future-title').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // 4. Eliminar
+    document.querySelectorAll('.btn-delete-future').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (confirm('¿Está seguro de eliminar esta planificación de gasto futuro?')) {
+          const id = parseInt(e.currentTarget.getAttribute('data-id'));
+          try {
+            await apiCall(`/api/future_expenses/${id}`, 'DELETE');
+            alertSuccess('Gasto futuro eliminado.');
+            await loadMonthData();
+            renderGastosFuturos();
+          } catch (err) {
+            alertError(err.error || 'Error al eliminar.');
+          }
+        }
+      });
+    });
+
+    lucide.createIcons();
+  }
+
+  document.getElementById('form-future-expense').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('future-id-field').value;
+    const data = {
+      title: document.getElementById('future-title').value,
+      amount: parseFloat(document.getElementById('future-amount').value),
+      target_date: document.getElementById('future-date').value || null,
+      deduct_from_budget: parseInt(document.getElementById('future-deduct').value),
+      notes: document.getElementById('future-notes').value,
+      status: 'pendiente' // Por defecto al guardar/crear
+    };
+
+    // Si estamos editando, mantener el estado que ya tenía
+    if (id) {
+      const old = state.futureExpenses.find(x => x.id === parseInt(id));
+      if (old) data.status = old.status;
+      data.id = parseInt(id);
+    }
+
+    try {
+      if (id) {
+        await apiCall(`/api/future_expenses/${id}`, 'PUT', data);
+        alertSuccess('Gasto futuro actualizado.');
+      } else {
+        await apiCall('/api/future_expenses', 'POST', data);
+        alertSuccess('Gasto futuro planificado.');
+      }
+      await loadMonthData();
+      renderGastosFuturos();
+    } catch (err) {
+      alertError(err.error || 'Error al guardar.');
+    }
+  });
+
+  document.getElementById('btn-cancel-future').addEventListener('click', () => {
+    renderGastosFuturos();
   });
 
   // ==========================================
@@ -3695,6 +3937,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { text: '🏷️ Configurar Categorías de Gastos', hash: '#categorias' },
       { text: '🔄 Planificar Gastos Recurrentes', hash: '#recurrentes' },
       { text: '💸 Controlar Deudas y Préstamos', hash: '#deudas' },
+      { text: '🔮 Gastos Futuros y Provisiones', hash: '#gastos-futuros' },
       { text: '🐷 Metas de Ahorro y Simulador', hash: '#metas' },
       { text: '📅 Ver Calendario de Vencimientos', hash: '#calendario' },
       { text: '📁 Cargar Comprobantes y PDF', hash: '#comprobantes' },

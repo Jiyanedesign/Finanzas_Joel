@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- CSS Principal -->
-  <link rel="stylesheet" href="css/style.css?v=12.0">
+  <link rel="stylesheet" href="css/style.css?v=13.0">
   
   <!-- Lucide Icons (Iconos vectoriales modernos de trazo fino) -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
@@ -64,6 +64,9 @@
         </a>
         <a href="#deudas" class="nav-item" id="nav-deudas">
           <i data-lucide="hand-coins"></i><span>Deudas</span>
+        </a>
+        <a href="#gastos-futuros" class="nav-item" id="nav-gastos-futuros">
+          <i data-lucide="calendar-range"></i><span>Gastos Futuros</span>
         </a>
         <a href="#metas" class="nav-item" id="nav-metas">
           <i data-lucide="piggy-bank"></i><span>Metas y Ahorro</span>
@@ -231,6 +234,10 @@
             <div class="sec-kpi-card">
               <span class="sec-kpi-title">Pagos en Efectivo</span>
               <span class="sec-kpi-val amount-sensitive" id="kpi-cash-payments">$0.00</span>
+            </div>
+            <div class="sec-kpi-card">
+              <span class="sec-kpi-title">Gastado con Tarjetas</span>
+              <span class="sec-kpi-val amount-sensitive" id="kpi-card-spent">$0.00</span>
             </div>
             <div class="sec-kpi-card">
               <span class="sec-kpi-title">Tarjeta Más Usada</span>
@@ -1111,6 +1118,86 @@
         </section>
 
         <!-- ==========================================
+             VISTA: GASTOS FUTUROS Y PROVISIONES
+             ========================================== -->
+        <section id="view-gastos-futuros" class="app-view">
+          <div class="view-header-title">
+            <h1>Gastos Futuros y Provisiones</h1>
+            <p>Planifique compras o gastos importantes a futuro y elija si desea apartar el dinero de su presupuesto mensual o guardarlo como recordatorio.</p>
+          </div>
+
+          <div class="charts-row">
+            <!-- Formulario de Registro -->
+            <div class="chart-card" style="flex: 1; min-width: 320px;">
+              <h3 id="future-form-title">Planificar Gasto Futuro</h3>
+              <div class="error-banner hidden" id="future-error-msg"></div>
+              <div class="success-banner hidden" id="future-success-msg"></div>
+              <form id="form-future-expense" style="margin-top: 1rem;">
+                <input type="hidden" id="future-id-field">
+                
+                <div class="form-group">
+                  <label for="future-title">Título del Gasto</label>
+                  <input type="text" id="future-title" class="input-premium" placeholder="Ej. Comprar ropa para viaje a Filipinas" required>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="future-amount">Monto Estimado ($)</label>
+                    <input type="number" id="future-amount" class="input-premium" step="0.01" min="0.01" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="future-date">Fecha Objetivo</label>
+                    <input type="date" id="future-date" class="input-premium">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="future-deduct">Acción de Presupuesto</label>
+                  <select id="future-deduct" class="input-premium" required>
+                    <option value="1">Deducir automáticamente del Presupuesto (Safe-to-Spend)</option>
+                    <option value="0">Solo mantener como nota/recordatorio</option>
+                  </select>
+                  <span style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem; display: block;">
+                    Si elige deducir, el monto se restará directamente del indicador "Dinero Libre (Safe-to-Spend)" del Dashboard.
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label for="future-notes">Notas / Enlaces</label>
+                  <textarea id="future-notes" class="input-premium" rows="2" placeholder="Agrega enlaces de compra o detalles..."></textarea>
+                </div>
+
+                <div class="form-actions" style="margin-top: 1rem;">
+                  <button type="submit" class="btn-primary-premium">Guardar Planificación</button>
+                  <button type="button" id="btn-cancel-future" class="btn-secondary-premium hidden">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Listado y Estado de Provisiones -->
+            <div class="chart-card" style="flex: 1.5; min-width: 320px;">
+              <h3>Mis Provisiones y Recordatorios</h3>
+              <div class="table-responsive" style="margin-top: 1rem;">
+                <table class="table-premium">
+                  <thead>
+                    <tr>
+                      <th>Gasto Futuro</th>
+                      <th>Monto</th>
+                      <th>Tipo</th>
+                      <th>Estado</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="future-expenses-table-body">
+                    <!-- Cargado dinámicamente -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
              VISTA 9: METAS Y AHORRO
              ========================================== -->
         <section id="view-metas" class="app-view">
@@ -1716,6 +1803,6 @@
   <!-- Overlay para cerrar el sidebar en móvil al tocar fuera -->
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-  <script src="js/app.js?v=12.0"></script>
+  <script src="js/app.js?v=13.0"></script>
 </body>
 </html>

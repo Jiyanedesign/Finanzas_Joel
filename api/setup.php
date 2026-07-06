@@ -224,14 +224,43 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    CREATE TABLE IF NOT EXISTS future_expenses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        target_date DATE DEFAULT NULL,
+        deduct_from_budget TINYINT(1) DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'pendiente',
+        notes TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ";
 
     $pdo->exec($sqlSchema);
     
-    // Migraciones dinámicas de base de datos para nuevas columnas
     try {
         $pdo->exec("ALTER TABLE accounts ADD COLUMN parent_account_id INT DEFAULT NULL");
         $pdo->exec("ALTER TABLE accounts ADD FOREIGN KEY (parent_account_id) REFERENCES accounts(id) ON DELETE SET NULL");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("
+        CREATE TABLE IF NOT EXISTS future_expenses (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            target_date DATE DEFAULT NULL,
+            deduct_from_budget TINYINT(1) DEFAULT 0,
+            status VARCHAR(50) DEFAULT 'pendiente',
+            notes TEXT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
     } catch (Exception $e) {}
 
     try {
